@@ -8,39 +8,30 @@ from typing import Dict
 from pathlib import Path
 
 
-BASE_PATH = Path(__file__).parent.parent.parent.parent
-sys.path.append(str(BASE_PATH))
-
-
 # local module
-from common.utils import SnowflakeIDGenerator, AsyncDict, atimer
-from configs.vector_database_config import GLOBAL_CONFIG
-from configs.config_v2.config_cls import WorkerConfig
-from configs.config_v2.config import WORKER_CONFIG
-from configs.config_v2.config_cls import FileConvertConfig
-from module.pipeline_v2.tool_calling import (
+from utils.helpers import SnowflakeIDGenerator, AsyncDict, atimer
+from configs.config_cls import WorkerConfig, FileConvertConfig
+from configs.config import WORKER_CONFIG
+from utils.tool_calling import (
     FileConverter, 
     OcrApi,
     LlmApi,
     EmbeddingApi,
     read_file
 )
-from module.pipeline_v2.data_cls import (
+from modules.workflow.insert_workflow.mineru.data_cls import (
     Task,
     TaskMeta,
     GraphInfo,
     AggChunk,
     AtomChunk,
     TableChunk,
-    MilvusDataV2
+    MilvusDataV
 )
-from module.pipeline_v2.task_manager import CoroTaskManager
-from module.pipeline_v2.insert_workflow.workflow_tasks import (
-    Chunking,
-    InsertPreprocessing
-)
-from module.vecdatas.predict import PyMilvusInference
-from module.storage.elastic_storage import ES_STORAGE
+from modules.workflow import CoroTaskManager
+
+from modules.storage.milvus_storage import MILVUS_STORAGE
+from modules.storage.elastic_storage import ES_STORAGE
 
 
 # TODO: 启用新的Milvus存储对象

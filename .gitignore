@@ -169,3 +169,11 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# vs code
+.vscode/
+
+
+# local dev
+dev/

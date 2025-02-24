@@ -1,1 +1,0 @@
-from .vecdatas_routes import vecdata_blue

@@ -126,7 +126,7 @@ class MilvusInterface(object):
     def __init__(self, config:MilvusConfig=None, collection:str=None) -> None:
         self.config = config or MilvusConfig()
         self.client = MilvusClient(self.config.conn_str)
-        self.get_collection_map = dict()
+        self.collection_map = dict()
         if collection:
             self.collection_map.update({collection: self.auto_release_collection(collection)})
         
@@ -149,6 +149,8 @@ class MilvusInterface(object):
                 logging.info(f"Releasing collection '{collection_name}' due to timeout.")
                 self.client.release_collection(collection_name)
                 timer = None
+                self.collection_map.pop(collection_name, None)
+
 
         def get_collection():
             """获取集合并启动超时释放"""
@@ -204,7 +206,6 @@ class MilvusInterface(object):
         logging.info(f'Create collection successfully: {collection_name}')
 
     def insert(self, collection_name, data:List[dict], timeout=None, partition_name=''):
-        
         res = self.client.insert(collection_name, data, timeout, partition_name)
         return res
     
