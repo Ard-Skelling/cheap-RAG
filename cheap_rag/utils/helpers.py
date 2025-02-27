@@ -25,6 +25,24 @@ def bytes_to_b64(bytes_data:bytes, encoding="utf-8"):
 generate_md5 = lambda text: hashlib.md5(text.encode('utf-8')).hexdigest()
 
 
+# metaclass singleton used for singleton instance
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            # we have not every built an instance before.  Build one now.
+            instance = super().__call__(*args, **kwargs)
+            cls._instances[cls] = instance
+        else:
+            instance = cls._instances[cls]
+            # here we are going to call the __init__ and maybe reinitialize.
+            if hasattr(cls, '__allow_reinitialization') and cls.__allow_reinitialization:
+                # if the class allows reinitialization, then do it
+                instance.__init__(*args, **kwargs)  # call the init again
+        return instance
+    
+
 class SnowflakeIDGenerator:
     def __init__(self, machine_id):
         self.machine_id = machine_id

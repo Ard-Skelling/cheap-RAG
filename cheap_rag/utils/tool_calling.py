@@ -8,23 +8,21 @@ import shutil
 import base64
 import logging
 import time
+import openai
+import aiofiles
 from urllib.parse import urljoin
 from pathlib import Path
 from typing import Union, List
 
 
-BASE_PATH = Path(__file__).parent.parent.parent
-sys.path.append(str(BASE_PATH))
-
-
 # local module
-from configs.config_v2.config_cls import (
+from configs.config_cls import (
     FileConvertConfig,
     OcrConfig,
     EmbeddingConfig,
     LlmConfig
 )
-from configs.config_v2.config import (
+from configs.config import (
     FILE_CONVERT_CONFIG,
     OCR_CONFIG,
     EMBEDDING_CONFIG,
@@ -82,28 +80,31 @@ async def fetch(
                     raise e
 
 
-def read_file(file_path:str):
+async def read_file(file_path:str):
     fp = Path(file_path)
     suffix = fp.suffix.lower()
     if suffix in {'.pdf', '.doc', '.docx'}:
-        with open(file_path, 'rb') as f:
-            return f.read()
+        async with aiofiles.open(file_path, 'rb') as f:
+            content = await f.read()
     elif suffix == '.json':
-        with open(file_path, 'r') as f:
-            return json.load(f)
+        async with aiofiles.open(file_path, 'r') as f:
+            content = await f.read()
+            content = json.loads(content)
     else:
         raise NotImplementedError(f'Unsupported file format!\nReading_file: {file_path}')
+    return content
 
 
-def write_file(data, file_path:str):
+async def write_file(data, file_path:str):
     fp = Path(file_path)
     suffix = fp.suffix.lower()
     if suffix in {'.pdf', '.doc', '.docx'}:
-        with open(file_path, 'wb') as f:
-            f.write(data)
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(data)
     elif suffix == '.json':
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+        async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
+            content = json.dumps(data, indent=4, ensure_ascii=False)
+            await f.write(content)
     else:
         raise NotImplementedError(f'Unsupported file format!\nWriting_file: {file_path}')
 
@@ -259,8 +260,14 @@ class OcrApi:
 class EmbeddingApi:
     def __init__(self, config:EmbeddingConfig=None) -> None:
         self.config = config or EMBEDDING_CONFIG
-        self.endpoint = urljoin(f'http://{self.config.host}:{self.config.port}', self.config.api)
+        self.endpoint = self.config.base_url
         self.semaphore = asyncio.Semaphore(self.config.semaphore)
+        if self.config.emb_type == 'openai':
+            self.client = openai.AsyncOpenAI(
+                api_key=self.config.token.get_secret_value(),
+                base_url=self.config.base_url,
+                timeout=self.config.timeout
+            )
 
     async def send_embedding(self, content:Union[str, List[str]]):
         headers = {"Content-Type": "application/json"}
@@ -269,7 +276,7 @@ class EmbeddingApi:
             "input": content,
         }
         result = await fetch(
-            self.endpoint, 
+            urljoin(self.endpoint, self.config.api), 
             body, 
             self.__class__.__name__, 
             self.config.timeout,
@@ -279,12 +286,54 @@ class EmbeddingApi:
         result = [rec['embedding'] for rec in result['data']]
         return result
 
+
+    async def openai_embedding(self, content:Union[str, List[str]]):
+        response = await self.client.embeddings.create(input=content, model=self.config.model)
+        embeddings = [ele.embedding for ele in response.data]
+        return embeddings
+
+
+class CPUEmbedding:
+    def __init__(self, config:CPUEmbeddingConfig=None) -> None:
+        self.config = config or EMBEDDING_CONFIG
+        self.endpoint = self.config.base_url
+        self.semaphore = asyncio.Semaphore(self.config.semaphore)
+        if self.config.emb_type == 'openai':
+            self.client = openai.AsyncOpenAI(
+                api_key=self.config.token.get_secret_value(),
+                base_url=self.config.base_url,
+                timeout=self.config.timeout
+            )
+
+    async def send_embedding(self, content:Union[str, List[str]]):
+        headers = {"Content-Type": "application/json"}
+        body = {
+            "model": self.config.model,
+            "input": content,
+        }
+        result = await fetch(
+            urljoin(self.endpoint, self.config.api), 
+            body, 
+            self.__class__.__name__, 
+            self.config.timeout,
+            request_kw={'headers': headers},
+            semaphore=self.semaphore
+        )
+        result = [rec['embedding'] for rec in result['data']]
+        return result
+
+
+    async def openai_embedding(self, content:Union[str, List[str]]):
+        response = await self.client.embeddings.create(input=content, model=self.config.model)
+        embeddings = [ele.embedding for ele in response.data]
+        return embeddings
+
     
 
 class LlmApi:
     def __init__(self, config:LlmConfig=None) -> None:
         self.config = config or LLM_CONFIG
-        self.endpoint = urljoin(f'http://{self.config.host}:{self.config.port}', self.config.api)
+        self.endpoint = self.config.base_url
         self.semaphore = asyncio.Semaphore(self.config.semaphore)
 
     async def send_llm(self, content:Union[str, List[str]]):
@@ -313,44 +362,19 @@ class LlmApi:
 
 
 if __name__ == '__main__':
-    # import time
+    import time
 
+    docs = [
+        "This agent is developed using Peter Attia‘s publicly available contents and is not affiliated with or endorsed by Peter Attia."
+    ]
 
-    # docs = [
-    #     '中国南方电网公司的综合管理体系的内涵是？',
-    #     '综合管理体系的内涵：以系统分析方法和现代企业治理思维对公司管理体系和管理能力进行全面升级与科学管控的理论实践。'
-    # ]
+    emb = EmbeddingApi()
+    llm = LlmApi()
+    st = time.time()
+    res = asyncio.run(emb.openai_embedding(docs))
+    et = time.time()
+    print(et -st)
+    print(res)
 
-
-    # async def test_api():
-    #     doc = '中国南方电网公司的综合管理体系的内涵是？'
-    #     count = 0
-    #     for i in range(200):
-    #         res = await llm.send_llm(doc)
-    #         count += len(res)
-    #     return count
-
-    
-    # # emb = EmbeddingApi()
-    # llm = LlmApi()
-    # st = time.time()
-    # res = asyncio.run(test_api())
-    # et = time.time()
-    # print(et -st)
-    # print(res)
-
-    # fp = '/gpfs/jincheng/csg/RAG/local_dev/022.TB 10101-2018_铁路工程测量规范.pdf'
-    # ocr = OcrApi()
-    # with open(fp, 'rb') as f:
-    #     pdf_bytes = f.read()
-    # res = asyncio.run(ocr.send_ocr(pdf_bytes, Path(fp).stem, 'test'))
-    # with open('/gpfs/jincheng/csg/RAG/local_dev/ocr_samples/sample_240113.json', 'w') as f:
-    #     json.dump(res, f, indent=4, ensure_ascii=False)
-
-    convertor = FileConverter()
-    fp = '/gpfs/jincheng/csg/RAG/local_dev/2、技术规范书-车网互动项目.docx'
-    odir = '/gpfs/jincheng/csg/RAG/local_dev/ocr_samples'
-    fmt = 'pdf'
-    res = asyncio.run(convertor.a_convert_file(fp, odir, fmt))
     ...
 

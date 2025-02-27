@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple, Literal
+from typing import Union, List, Literal
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator, Field
@@ -100,32 +100,9 @@ class ImageChunk(AtomChunk):
 
 
 class MilvusData(DataPoint):
-    # 老版本的写入Milvus字段，未启用
-    question: str
-    answer: str
-    vec: list
-    slice_vec: list
-    q_slice_vec: list
-    file_name: str
-    index: int
-    type_: str = Field(alias='type')
-    collection_name: str
-    url: str
-    parent_title: str
-    title: str
-    create_time: str
-
-
-class MilvusDataV2(BaseModel):
-    # V2版本的写入Milvus字段，仅保留文本片id、向量和文件名三个字段
-    # 写入Milvus前应调用to_ndarray方法，将向量字段转为np.ndarry类型
     doc_id: str
-    vec: list
     file_name: str
-
-    def to_ndarray(self):
-        # Milvus数据库只接受np.ndarray数据类型，需将浮点数列表转化为np.ndarry，并保持其它字段
-        return {'doc_id': self.doc_id, 'vec': np.array(self.vec), 'file_name': self.file_name}
+    vec: List[Union[float, int]]
 
 
 class EsData(DataPoint):

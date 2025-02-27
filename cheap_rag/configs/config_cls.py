@@ -1,30 +1,66 @@
 import multiprocessing
-from typing import Optional
+from typing import Optional, Literal
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
 
-BASE_PATH = Path(__file__).parent.parent.parent
+BASE_PATH = Path(__file__).parent.parent
 
 
 # 初始化缓存目录
 CACHE = BASE_PATH.joinpath('.cache')
 
 # 初始化原始文件存储目录
-RAW_FILE_CACHE = CACHE.joinpath('v2_raw_file')
+RAW_FILE_CACHE = CACHE.joinpath('raw_file')
 RAW_FILE_CACHE.mkdir(parents=True, exist_ok=True)
 
 
 # 初始化文件转换存储目录
-FILE_CONVERT_CACHE = CACHE.joinpath('v2_file_convert')
+FILE_CONVERT_CACHE = CACHE.joinpath('file_convert')
 FILE_CONVERT_CACHE.mkdir(parents=True, exist_ok=True)
 
 
 # 初始化ocr结果缓存目录
-OCR_CACHE = CACHE.joinpath('v2_ocrs')
+OCR_CACHE = CACHE.joinpath('ocrs')
 OCR_CACHE.mkdir(parents=True, exist_ok=True)
 
 
+# Storage config
+class MilvusConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='milvus_')
+    
+    uri: str = 'http://localhost:19530'
+    user: SecretStr = ''
+    password: SecretStr = ''
+    token: SecretStr = ''
+    auto_release_seconds: float = 300.
+    default_collection: Optional[str] = None
+
+
+class MinioConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='minio_')
+
+
+    host: str
+    port: int
+    ak: SecretStr
+    sk: SecretStr
+    bucket: str
+    bucket_ocr: str
+    max_workers: int = 32
+
+
+class ESConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='es_')
+
+    host: str
+    port: int
+    user: SecretStr
+    pwd: SecretStr
+
+
+# File format config
 class FileConvertConfig(BaseSettings):
     num_workers: int = max(int(multiprocessing.cpu_count() / 8), 1)
     # TODO：任务队列中的文件数量，超过的将会持久化到硬盘，之后再读取
@@ -35,14 +71,9 @@ class FileConvertConfig(BaseSettings):
 
 
 class OcrConfig(BaseSettings):
-    host: str
-    port: str
-    timeout: float = 99999
-    use_minio: bool = True
-    predict_api: str = '/predict'
-    download_api: str = '/download'
-    sema_predict: int = 16    # 提交ocr的并发量
-    sema_download: int = 128    # 下载图片并发量
+    base_url: str
+    timeout: float = 3600
+    sema_process: int = 16    # 提交ocr的并发量
     ocr_cache: Path = OCR_CACHE
 
 
@@ -55,22 +86,30 @@ class WorkerConfig(BaseSettings):
 
 
 class EmbeddingConfig(BaseSettings):
-    host: str
-    port: str
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='emb_')
+
+    emb_type: Literal['rest', 'openai'] = 'openai'
+    base_url: str
     timeout: float = 1800
     api: str = '/v1/embeddings'
     semaphore: int = 16
-    model:str = "rgzn_bge_model"
+    model:str = ''
     batch_size: int = 128
+    token: SecretStr = ''
+
+
+class LocalEmbeddingConfig(BaseSettings):
+    emb_type: Literal['ONNX', 'TensorRT']
+    model_dir: str
+    model_path: str = ''
 
 
 class LlmConfig(BaseSettings):
-    host: str
-    port: str
-    timeout: float = 99999
+    base_url: str
+    timeout: float = 1800
     api: str = '/v1/chat/completions'
     semaphore: int = 16
-    model: str = 'llm_72b'
+    model: str = 'gpt-4o-mini'
 
 
 class ChunkingConfig(BaseSettings):

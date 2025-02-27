@@ -9,10 +9,8 @@ sys.path.append(str(BASE_PATH))
 from typing import List, Union
 from elasticsearch import Elasticsearch, helpers, NotFoundError
 from datetime import datetime
-from configs.vector_database_config import GLOBAL_CONFIG
-
-
-ES_CONFIG = GLOBAL_CONFIG.es_config
+from configs.config_cls import ESConfig
+from configs.config import ES_CONFIG
 
 
 class FrequentQuery:
@@ -21,16 +19,17 @@ class FrequentQuery:
 
 
 class ElasticStorage:
-    def __init__(self) -> None:
+    def __init__(self, config: ESConfig = None) -> None:
+        self.config = config or ES_CONFIG
         self.__es = Elasticsearch(
-            [f"http://{ES_CONFIG['host']}:{ES_CONFIG['port']}"],
-            basic_auth=(ES_CONFIG['user'], ES_CONFIG['pwd']),
+            [f"http://{self.config.host}:{self.config.port}"],
+            basic_auth=(self.config.user.get_secret_value(), self.config.pwd.get_secret_value()),
             verify_certs=False
         )
 
 
     # 创建索引
-    def create_index(self, index_name:str, mappings:dict=None, settings:dict=None, version=1):
+    def create_index(self, index_name:str, mappings:dict, settings:dict=None):
         """创建索引, 通过properties参数, 指定数据结构
         
         Params:
@@ -46,47 +45,11 @@ class ElasticStorage:
                 }
         """
         # 定义索引映射
-        mappings = mappings or {
-            "properties": {
-                "question": {"type": "text"},
-                "answer": {"type": "text"},
-                "file_name": {"type": "keyword"},
-                "index": {"type": "integer"},
-                "atom_index": {"type": "integer"},
-                "agg_index": {"type": "integer"},
-                # chunk_type 支持 text, table, image, qa, outline, summary, atom_text, agg_text几种形式
-                # atom_text 是原子化的文本片，是向量检索的最小单元
-                # agg_text 是长达20000字左右的大文本片，是真正返回的片段
-                "chunk_type": {"type": "keyword"},
-                "url": {"type": "keyword"},
-                "parent_title": {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
-                "title": {"type": "text", "fields": {"keyword": {"type": "keyword"}}},
-                "create_time": {"type": 'keyword'}
-            }
-        }
-        if version == 2:
-            mappings['properties'].update({
-                "doc_id": {"type": "keyword"}
-            })
         mapping = {
             "mappings": mappings
         }
-        settings = settings or {
-            "analysis": {
-                "tokenizer": {
-                    "ik_max_word": {
-                        "type": "ik_max_word"  # 使用 ik_max_word 分词器
-                    }
-                },
-                "analyzer": {
-                    "default": {
-                        "type": "custom",
-                        "tokenizer": "ik_max_word"
-                    }
-                }
-            }
-        }
-        mapping.update({"settings": settings})
+        if settings:
+            mapping.update({"settings": settings})
 
         # 创建索引
         if not self.__es.indices.exists(index=index_name):
@@ -161,10 +124,10 @@ class ElasticStorage:
 
     # 查询文档
     def search_documents(self, index_name:str, query:dict, output_fields:List[str]=None, size=10, **kwargs):
-        body = {"query": query}
-        body.update(kwargs)
         size = 10000 if size == 0 else size
-        res = self.__es.search(index=index_name, body=body, size=size)
+        body = {"query": query, "size": size}
+        body.update(kwargs)
+        res = self.__es.search(index=index_name, body=body)
         return self.select_output_data(res, output_fields)
 
     def multi_search(self, body:list, output_fields:list=None, index_name:str=None, is_flatten=True):
@@ -272,7 +235,7 @@ if __name__ == "__main__":
     # import time
 
 
-    # index_name = "little_q_241224"
+    # index_name = "test_index"
     # es = ElasticStorage()
 
     # # 创建索引
@@ -308,7 +271,7 @@ if __name__ == "__main__":
 
     # # 查询文档
     # query = {
-    #     "match": {"answer": "制度考核"}
+    #     "match": {"answer": "内容"}
     # }
     # res = es.search_documents(index_name, query=query)
     # print(res)
@@ -323,7 +286,7 @@ if __name__ == "__main__":
     #     query = {
     #         'bool': {
     #             'must': [
-    #                 {'term': {'file_name': 'GJB-2809A-2005 部队油库加油站设计与施工规范.pdf'}},
+    #                 {'term': {'file_name': 'sample_3.pdf'}},
     #                 {'term': {'index': i}},
     #                 {'term': {'chunk_type': 'text'}}
     #             ]
@@ -332,14 +295,14 @@ if __name__ == "__main__":
     #     return {'query': query}
     
     # body = []
-    # for i in [-1, 10000]:
+    # for i in [1, 2]:
     #     body.append(dict())
     #     body.append(build_query(i))
 
     # res = ES_STORAGE.multi_search(body, index_name=index_name, is_flatten=False)
 
     # # 删除文档
-    # es.delete_doc(index_name, query={'terms': {'file_name': ['negtive_sample.pdf']}})
+    # es.delete_doc(index_name, query={'terms': {'file_name': ['sample.pdf']}})
 
 
     # # 删除索引
