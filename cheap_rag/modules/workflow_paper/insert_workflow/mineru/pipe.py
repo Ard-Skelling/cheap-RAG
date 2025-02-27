@@ -1,7 +1,6 @@
 import sys
 import asyncio
 import re
-import logging
 import json
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
@@ -9,6 +8,7 @@ from pathlib import Path
 
 
 # local module
+from utils.logger import logger
 from utils.helpers import SnowflakeIDGenerator, AsyncDict, atimer
 from configs.config_cls import WorkerConfig, FileConvertConfig
 from configs.config import WORKER_CONFIG
@@ -317,7 +317,7 @@ class InsertWorkflow:
                 result = await self._submit(task_id, task_manager, pool, task_meta)
                 return result
             except Exception as err:
-                logging.warning(f'Error occurred: {task_meta.file_name}\n{repr(err)}')
+                logger.warning(f'Error occurred: {task_meta.file_name}\n{repr(err)}')
                 task_manager.tasks.pop(task_id, None)
                 continue
         raise err

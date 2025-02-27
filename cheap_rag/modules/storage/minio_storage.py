@@ -1,12 +1,17 @@
 import json
-import logging
 from io import BytesIO
 from minio import Minio
 from minio.error import S3Error
 from minio.deleteobjects import DeleteObject
 import sys
 import os
+
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+
+# Local modules
+from utils.logger import logger
 from configs.config_cls import MinioConfig
 from configs.config import MINIO_CONFIG
 from concurrent.futures import ThreadPoolExecutor
@@ -32,7 +37,7 @@ class MinioStorage:
         is_existed = self.client.bucket_exists(bucket_name)
         if not is_existed:
             self.client.make_bucket(bucket_name)
-            logging.info(f'create minio bucket {bucket_name} seccessfully.')
+            logger.info(f'create minio bucket {bucket_name} seccessfully.')
 
     def put_object(
         self,
@@ -68,7 +73,7 @@ class MinioStorage:
             content_type=content_type,
             **kwargs
         )
-        logging.info(f'Uploaded to Minio: {object_name}')
+        logger.info(f'Uploaded to Minio: {object_name}')
 
     def get_object(
             self,
@@ -223,7 +228,7 @@ class MinioStorage:
         errors = self.client.remove_objects(bucket_name, delete_object_list)
         if errors:
             for error in errors:
-                logging.error("error occurred when Minio deleting object", error)
+                logger.error("error occurred when Minio deleting object", error)
             
         
 MINIO_STORAGE = MinioStorage()

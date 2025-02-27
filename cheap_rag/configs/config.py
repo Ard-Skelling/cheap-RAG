@@ -3,6 +3,7 @@ from os import getenv
 
 # local module
 from configs.config_cls import (
+    LoggerConfig,
     MilvusConfig,
     MinioConfig,
     ESConfig,
@@ -14,6 +15,17 @@ from configs.config_cls import (
     WorkerConfig,
     ChunkingConfig,
     InsertPreprocessingConfig
+)
+
+
+LOGGER_CONFIG = LoggerConfig(
+    file_name='cheap_rag.log',
+    level='DEBUG',
+    when='midnight',
+    interval=1,
+    backup_count=90,
+    delay=False,
+    utc=True
 )
 
 
@@ -60,8 +72,8 @@ EMBEDDING_CONFIG = EmbeddingConfig(
 
 LOCAL_EMBEDDING_CONFIG = LocalEmbeddingConfig(
     emb_type='ONNX',
-    model_dir='',
-    model_path=''
+    model_dir='/root/model-params/multilingual-e5-large-instruct/onnx',
+    model_path='/root/model-params/multilingual-e5-large-instruct/onnx/model.onnx'
 )
 
 

@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import logging
+
 from flask import request
 
 from configs import PublicEngineConfig
@@ -12,6 +12,11 @@ from common.deal_response import response_func, BadRequest
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from typing import List, Union, Literal
+
+
+# Local modules
+from utils.logger import logger
+
 
 __all__ = ["VecDataApiCommon"]
 
@@ -32,9 +37,9 @@ class BaseDealParams(object):
             csid = vd.csid
         except Exception as e:
             # 校验必传参数
-            logging.error(f"The required parameter csid is missing. ERROR: {e}")
+            logger.error(f"The required parameter csid is missing. ERROR: {e}")
             raise BadRequest(response_func(csid=csid, code="10002", message=f"The required parameter csid is missing. ERROR: {e}"))
-        logging.info("Parse request parameter successfully.")
+        logger.info("Parse request parameter successfully.")
         return vd
 
 
@@ -168,10 +173,10 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
     
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=csid, code="10001", message="Request method not support."))
         
         # 日志指纹, 必传用来定位日志文件
@@ -179,7 +184,7 @@ class VecDataApiCommon(BaseDealParams):
         vd = VecDataApiCommon.data_validate_request(VecBaseModel, data_dict=data_dict)
         csid = vd.csid
             
-        logging.info("Parse request parameter successfully.")
+        logger.info("Parse request parameter successfully.")
         return csid
     
     @staticmethod
@@ -190,10 +195,10 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
     
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=csid, code="10001", message="Request method not support."))
         
         # 日志指纹, 必传用来定位日志文件
@@ -202,8 +207,8 @@ class VecDataApiCommon(BaseDealParams):
         csid = vd.csid
         collections = vd.collections
         version = vd.version
-        logging.info("request parameter text: {}".format(collections))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter text: {}".format(collections))
+        logger.info("Parse request parameter successfully.")
         return collections, csid, version
     
     @staticmethod
@@ -214,10 +219,10 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
     
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=csid, code="10001", message="Request method not support."))
        
         # 日志指纹, 必传用来定位日志文件
@@ -233,8 +238,8 @@ class VecDataApiCommon(BaseDealParams):
             if PublicEngineConfig.PUB_VEC_DB in collections:
                 raise BadRequest(response_func(csid=csid, code="10002", message="The database name cannot be the same as the default database."))
 
-        logging.info("request parameter text: {}".format(collections))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter text: {}".format(collections))
+        logger.info("Parse request parameter successfully.")
         return collections, csid
 
     @staticmethod
@@ -245,10 +250,10 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
     
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=csid, code="10001", message="Request method not support."))
         
         # 日志指纹, 必传用来定位日志文件
@@ -261,8 +266,8 @@ class VecDataApiCommon(BaseDealParams):
         file_meta = vd.file_meta
         is_enhanced = vd.is_enhanced
         version = vd.version
-        logging.info("request parameter file_name: {}\n domain: {}".format(file_name, domain))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter file_name: {}\n domain: {}".format(file_name, domain))
+        logger.info("Parse request parameter successfully.")
 
         return document, domain, file_name, file_meta, csid, is_enhanced, version
     
@@ -274,9 +279,9 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=csid, code="10001", message="Request method not support."))
         
         # 日志指纹, 必传用来定位日志文件
@@ -285,8 +290,8 @@ class VecDataApiCommon(BaseDealParams):
         csid = vd.csid
         domain = vd.domain
         file_name = vd.file_name
-        logging.info("request parameter domain: {}\nfile_name:{}".format(domain, file_name))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter domain: {}\nfile_name:{}".format(domain, file_name))
+        logger.info("Parse request parameter successfully.")
         return domain, file_name, csid
     
     @staticmethod
@@ -295,9 +300,9 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=None, code="10001", message="Request method not support."))
 
         # question: 用户问题, topn: 返回的数量, csid: 定位日志的指纹
@@ -312,8 +317,8 @@ class VecDataApiCommon(BaseDealParams):
         topn = vd.topn
         use_rerank = vd.use_rerank
         version = vd.version
-        logging.info("request parameter question: {}\ndomain: {}\nsearch_field: {}\noutput_fields: {}\nthreshold: {}\ntopn: {}.".format(question, domain, search_field, output_fields, threshold, topn))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter question: {}\ndomain: {}\nsearch_field: {}\noutput_fields: {}\nthreshold: {}\ntopn: {}.".format(question, domain, search_field, output_fields, threshold, topn))
+        logger.info("Parse request parameter successfully.")
         return question, domain, search_field, output_fields, threshold, topn, csid, use_rerank, version
     
     @staticmethod
@@ -322,9 +327,9 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=None, code="10001", message="Request method not support."))
 
         # question: 用户问题, domain:库名, topn: 0精确搜索默认, csid: 定位日志的指纹
@@ -336,8 +341,8 @@ class VecDataApiCommon(BaseDealParams):
         search_field = vd.search_field
         output_fields = vd.output_fields
         topn = vd.topn
-        logging.info("request parameter question: {}\ndomain: {}\noutput_fields: {}\nsearch_field: {}\ntopn: {}.".format(question, domain, output_fields, search_field, topn))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter question: {}\ndomain: {}\noutput_fields: {}\nsearch_field: {}\ntopn: {}.".format(question, domain, output_fields, search_field, topn))
+        logger.info("Parse request parameter successfully.")
         return question, domain, output_fields, search_field, topn, csid 
     
 
@@ -347,9 +352,9 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=None, code="10001", message="Request method not support."))
 
         # domain:库名, csid: 定位日志的指纹
@@ -358,8 +363,8 @@ class VecDataApiCommon(BaseDealParams):
         csid = vd.csid
         domain = vd.domain
         output_fields = vd.output_fields
-        logging.info("request parameter domain: {}\noutput_fields: {}.".format(domain, output_fields))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter domain: {}\noutput_fields: {}.".format(domain, output_fields))
+        logger.info("Parse request parameter successfully.")
         return domain, output_fields, csid 
     
 
@@ -369,9 +374,9 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=None, code="10001", message="Request method not support."))
 
         # domain:库名, csid: 定位日志的指纹
@@ -379,8 +384,8 @@ class VecDataApiCommon(BaseDealParams):
         vd = VecDataApiCommon.data_validate_request(FileNameSearchEngineRequest, data_dict=data_dict)
         csid = vd.csid
         domain = vd.domain
-        logging.info("request parameter domain: {}.".format(domain))
-        logging.info("Parse request parameter successfully.")
+        logger.info("request parameter domain: {}.".format(domain))
+        logger.info("Parse request parameter successfully.")
         return domain, csid 
     
     @staticmethod
@@ -389,14 +394,14 @@ class VecDataApiCommon(BaseDealParams):
         csid = None
         headers = request.headers
         # 打印头信息
-        logging.info("request headers is: {}".format(str(headers)))
+        logger.info("request headers is: {}".format(str(headers)))
         if request.method != "POST":
-            logging.error("Request method not support.")
+            logger.error("Request method not support.")
             raise BadRequest(response_func(csid=None, code="10001", message="Request method not support."))
 
         # domain:库名, csid: 定位日志的指纹
         data_dict = VecDataApiCommon.get_json_param()
         vd = VecDataApiCommon.data_validate_request(ObjStorageEngineRequest, data_dict=data_dict)
-        logging.info("Parse request parameter successfully.")
+        logger.info("Parse request parameter successfully.")
         return vd.bucket_name, vd.obj_path, vd.obj_base64, vd.csid, vd.method
     

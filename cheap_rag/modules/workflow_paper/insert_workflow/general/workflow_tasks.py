@@ -1,13 +1,13 @@
 import re
 import asyncio
-import logging
 from pathlib import Path
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from typing import Dict
 
 
-# local module
+# Local module
+from utils.logger import logger
 from common.utils import generate_md5
 from configs.config_v2.config_cls import (
     ChunkingConfig,
@@ -291,7 +291,7 @@ class InsertPreprocessing:
         aggs = [self.get_agg_chunk(domain, file_name, agg_index, agg_chunk) \
             for agg_index, agg_chunk in agg_chunks.items()]
         # 返回待写入es的agg_chunk数据
-        logging.info(f'agg_text processed: {file_name}, count: {len(aggs)}')
+        logger.info(f'agg_text processed: {file_name}, count: {len(aggs)}')
         return aggs
 
     
@@ -324,7 +324,7 @@ class InsertPreprocessing:
             res = dict(zip(doc_ids, res))
             emb_results.update(res)
         emb_results = [MilvusDataV2(doc_id=doc_id, vec=vec, file_name=file_name) for doc_id, vec in emb_results.items()]
-        logging.info(f'Embedding finished: {file_name}, count: {len(emb_results)}')
+        logger.info(f'Embedding finished: {file_name}, count: {len(emb_results)}')
         return emb_results
     
 
@@ -473,7 +473,7 @@ Q2：[具体问题2]
             table_queue.task_done()
         # 处理完table，代表需embeding的队列结束
         await emb_queue.put(None)
-        logging.info(f'Table parsed, count: {len(table_results)}')
+        logger.info(f'Table parsed, count: {len(table_results)}')
         return table_results
 
 
@@ -584,7 +584,7 @@ Q2：[具体问题2]
             
         # 添加结束信号
         await table_queue.put(None)
-        logging.info(f'atom_text parsed: {file_name}, count: {len(text_results)}')
+        logger.info(f'atom_text parsed: {file_name}, count: {len(text_results)}')
         return text_results
         
 
@@ -602,7 +602,7 @@ Q2：[具体问题2]
         # await emb_queue.join()
         # await table_queue.join()
         aggs, text_atoms, table_atoms, emb_results = await asyncio.gather(*tasks)
-        logging.info(f'Preprocessed: {file_name}')
+        logger.info(f'Preprocessed: {file_name}')
         return aggs, text_atoms, table_atoms, emb_results
     
 

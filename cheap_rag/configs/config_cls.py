@@ -26,6 +26,17 @@ OCR_CACHE = CACHE.joinpath('ocrs')
 OCR_CACHE.mkdir(parents=True, exist_ok=True)
 
 
+# Logger config
+class LoggerConfig(BaseSettings):
+    file_name: str = 'cheap_rag.log'
+    level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
+    when: str = 'midnight'    # S-Seconds, M-Minutes, H-Hours, D-Days, midnight, W{0-6}-certain day
+    interval: int = 1
+    backup_count: int = 90
+    delay: bool = False
+    utc: bool = True
+    
+
 # Storage config
 class MilvusConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='milvus_')

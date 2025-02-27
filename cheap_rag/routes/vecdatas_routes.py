@@ -8,7 +8,6 @@ import io
 import json
 import time
 import re
-import logging
 import traceback
 import threading
 from collections import defaultdict
@@ -19,6 +18,7 @@ from typing import List, Tuple
 
 
 # local module
+from utils.logger import logger
 from configs import PublicEngineConfig
 from configs.vector_database_config import GLOBAL_CONFIG
 from configs.config_v2.config import WORKER_CONFIG
@@ -83,19 +83,19 @@ def vecDataEntityServer():
         req_start_time = time.time()
         csid = VecDataApiCommon.parse_vecdata_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         future = read_thread_pool.submit(vecDataEngine.get_vecdata_result, csid)
         response = future.result()
         
         return Response(construct_response_result(response, csid=csid), mimetype="application/json")
     except Exception as err:
-        logging.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
 
 
@@ -108,18 +108,18 @@ def vecDataCreateServer():
         req_start_time = time.time()
         collections, csid, version = VecDataApiCommon.parse_vecdata_create_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         future = write_thread_pool.submit(vecDataEngine.create_vecdata, collections, csid, version=version)
         response = future.result()
         return Response(construct_response_result(response, csid=csid), mimetype="application/json")
     except Exception as err:
-        logging.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
 
 
@@ -132,12 +132,12 @@ def vecDataDeleteServer():
         req_start_time = time.time()
         collections, csid = VecDataApiCommon.parse_vecdata_delete_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         future = write_thread_pool.submit(vecDataEngine.delete_vecdata, collections, csid)
         response = future.result()
@@ -145,7 +145,7 @@ def vecDataDeleteServer():
         return Response(construct_response_result(response, csid=csid), mimetype="application/json")
 
     except Exception as err:
-        logging.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
 
 
@@ -158,12 +158,12 @@ async def dataInsertServer():
         req_start_time = time.time()
         document, domain, file_name, file_meta, csid, is_enhanced, version = VecDataApiCommon.parse_data_insert_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
         suffix = Path(file_name).suffix.lower()
         if version == 1 or suffix in {'.xlsx', '.xls', '.txt', '.json', '.csv'}:
             future = write_thread_pool.submit(vecDataEngine.insert_data, document, domain, file_name, file_meta, csid, is_enhanced=is_enhanced, version=version)
@@ -188,7 +188,7 @@ async def dataInsertServer():
         return Response(construct_response_result(response, csid=csid), mimetype="application/json")
 
     except Exception as err:
-        logging.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         err = BadRequest(response_func(csid=csid, code='10003', message=repr(err)))
         return Response(err.message, mimetype="application/json")
 
@@ -202,12 +202,12 @@ def dataDeleteServer():
         req_start_time = time.time()
         domain, file_name, csid = VecDataApiCommon.parse_data_delete_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         future = write_thread_pool.submit(vecDataEngine.delete_data, domain, file_name, csid)
         response = future.result()
@@ -215,7 +215,7 @@ def dataDeleteServer():
         return Response(construct_response_result(response, csid=csid), mimetype="application/json")
 
     except Exception as err:
-        logging.error(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
 
 
@@ -230,12 +230,12 @@ def DataSearchServer():
         question, domain, search_field, output_fields, threshold, topn, csid, use_rerank, version = VecDataApiCommon.parse_data_search_request()
         output_fields = list(set(output_fields).union({'type', 'index', 'file_name'}))
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         def retrieve_context(index, record):
             rec = vecDataEngine.scaler_query_data(
@@ -392,7 +392,7 @@ def DataSearchServer():
                 response = cost_time(parallel_recall)(response, dupli)
 
                 if GLOBAL_CONFIG.rerank_config['use_xinfer'] or use_rerank:
-                    logging.info('starting rerank...')
+                    logger.info('starting rerank...')
                     # 对检索结果进行重排
                     documents = []
                     for rec in response:
@@ -420,7 +420,7 @@ def DataSearchServer():
                     response = [dict(zip(key_order, (d[key] for key in key_order))) for d in documents]
                 return construct_response_result(response, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 raise err
 
         def es_id_to_agg(doc_ids: List[int], output_fields:List[str]):
@@ -527,7 +527,7 @@ def DataSearchServer():
                 # 
                 return construct_response_result(agg_res, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 raise err
             
         if version == 1:
@@ -536,8 +536,8 @@ def DataSearchServer():
             return Response(cost_time(generate_v2)(output_fields), mimetype="application/json")
         
     except Exception as err:
-        logging.error("Faild to predict model.")
-        logging.error(traceback.format_exc())
+        logger.error("Faild to predict model.")
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
     
 
@@ -550,12 +550,12 @@ def DataPreciseSearchServer():
         req_start_time = time.time()
         question, domain, output_fields, search_field, topn, csid   = VecDataApiCommon.parse_data_precise_search_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
         
         def generate():
             try:
@@ -577,14 +577,14 @@ def DataPreciseSearchServer():
                 response = new_res
                 return construct_response_result(response, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 return err.message
             
         return Response(cost_time(generate)(), mimetype="application/json")
         
     except Exception as err:
-        logging.error("Faild to predict model.")
-        logging.error(traceback.format_exc())
+        logger.error("Faild to predict model.")
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
     
 
@@ -597,12 +597,12 @@ def FieldSearchServer():
         req_start_time = time.time()
         domain, output_fields, csid = VecDataApiCommon.parse_field_search_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
         
         def generate():
             try:
@@ -610,14 +610,14 @@ def FieldSearchServer():
                 response = future.result()
                 return construct_response_result(response, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 return err.message
             
         return Response(cost_time(generate)(), mimetype="application/json")
         
     except Exception as err:
-        logging.error("Faild to predict model.")
-        logging.error(traceback.format_exc())
+        logger.error("Faild to predict model.")
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
 
 
@@ -630,12 +630,12 @@ def FileNameSearchServer():
         req_start_time = time.time()
         domain, csid = VecDataApiCommon.parse_file_name_search_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
-        logging.info("The current program fingerprint are: {}".format(csid))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The current program fingerprint are: {}".format(csid))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
         
         def generate():
             try:
@@ -643,14 +643,14 @@ def FileNameSearchServer():
                 response = ES_STORAGE.search_unique(domain, 'file_name')
                 return construct_response_result(response, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 return err.message
             
         return Response(cost_time(generate)(), mimetype="application/json")
         
     except Exception as err:
-        logging.error("Faild to predict model.")
-        logging.error(traceback.format_exc())
+        logger.error("Faild to predict model.")
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")
     
 
@@ -673,11 +673,11 @@ def ObjStorageServer():
         req_start_time = time.time()
         bucket_name, obj_path, obj_base64, csid, method = VecDataApiCommon.parse_obj_storage_request()
         req_end_time = time.time()
-        logging.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
+        logger.info("The request data reception is completed, cost: {} s".format(req_end_time - req_start_time))
 
         # 开始进行模型处理
         t = threading.currentThread()
-        logging.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
+        logger.info("Threading id: {}, name: {}".format(t.ident, t.getName()))
 
         def generate():
             try:
@@ -691,12 +691,12 @@ def ObjStorageServer():
                     raise ValueError(f'Invalid method: {method}')
                 return construct_response_result(response, csid)
             except Exception as err:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 return err.message
             
         return Response(cost_time(generate)(), mimetype="application/json")
 
     except Exception as err:
-        logging.error("Faild to put obj-storage.")
-        logging.error(traceback.format_exc())
+        logger.error("Faild to put obj-storage.")
+        logger.error(traceback.format_exc())
         return Response(err.message, mimetype="application/json")

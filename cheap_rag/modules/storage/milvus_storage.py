@@ -3,7 +3,6 @@
 
 
 import threading
-import logging
 from pymilvus import MilvusClient, DataType
 from typing import List, Union, Optional
 from pydantic import BaseModel, ConfigDict
@@ -12,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 # local modules
 from configs.config_cls import MilvusConfig
 from configs.config import MILVUS_CONFIG
+from utils.logger import logger
 
 
 class Field(BaseModel):
@@ -131,7 +131,7 @@ class MilvusInterface(object):
             nonlocal timer
             load_status = self.client.get_load_state(collection_name)
             if load_status.get('state', '') == '<LoadState: Loaded>':
-                logging.info(f"Releasing collection '{collection_name}' due to timeout.")
+                logger.info(f"Releasing collection '{collection_name}' due to timeout.")
                 self.client.release_collection(collection_name)
                 timer = None
                 self.collection_map.pop(collection_name, None)
@@ -141,7 +141,7 @@ class MilvusInterface(object):
             nonlocal timer
             load_status = self.client.get_load_state(collection_name)
             if load_status.get('state', '') == '<LoadState: NotLoad>':
-                logging.info(f"Loading collection '{collection_name}'.")
+                logger.info(f"Loading collection '{collection_name}'.")
                 self.client.load_collection(collection_name)
 
             # 如果已有定时器，先取消
@@ -197,7 +197,7 @@ class MilvusInterface(object):
             schema=schema,
             index_params=index_params
         )
-        logging.info(f'Create collection successfully: {collection_name}')
+        logger.info(f'Create collection successfully: {collection_name}')
 
 
     def load_collection(self, collection_name):
