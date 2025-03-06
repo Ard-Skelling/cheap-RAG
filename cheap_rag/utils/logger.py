@@ -1,3 +1,4 @@
+import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
@@ -31,3 +32,7 @@ handler = TimedRotatingFileHandler(
 handler.suffix = "%Y-%m-%d.log"
 handler.setFormatter(logging.Formatter('%(asctime)s -  %(levelname)s - %(module)s - %(funcName)s - %(message)s'))
 logger.addHandler(handler)
+
+consol_handler = logging.StreamHandler(sys.stdout)
+consol_handler.setFormatter(logging.Formatter('%(asctime)s -  %(levelname)s - %(module)s - %(funcName)s - %(message)s'))
+logger.addHandler(consol_handler)

@@ -9,12 +9,35 @@ sys.path.append(str(BASE_PATH))
 from typing import List, Union
 from elasticsearch import Elasticsearch, helpers, NotFoundError
 from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+
+
+# Local modules
 from configs.config_cls import ESConfig
 from configs.config import ES_CONFIG
+from utils.logger import logger
+
+
+class Properties(BaseModel):
+    timestamp: dict = Field({'type': 'date'}, alias='@timestamp')
+
+
+class Mappings(BaseModel):
+    properties: Properties
+
+
+class Settings(BaseModel):
+    ...
+
+
+class ElasticSetting(BaseModel):
+    suffix: str
+    mappings: Mappings
+    settings: Settings
 
 
 class FrequentQuery:
-    # TODO: 收录一些常用的查询范式
+    # TODO: General query schema patterns
     ...
 
 
@@ -54,9 +77,9 @@ class ElasticStorage:
         # 创建索引
         if not self.__es.indices.exists(index=index_name):
             self.__es.indices.create(index=index_name, body=mapping)
-            print(f"ES索引 {index_name} 已创建")
+            logger.info(f"ES index {index_name} is created.")
         else:
-            print(f"ES索引 {index_name} 已存在")
+            logger.info(f"ES index {index_name} has been created.")
 
     # 插入文档
     def insert_document(self, index_name:str, doc:dict, doc_id=None):
@@ -68,7 +91,7 @@ class ElasticStorage:
         if doc_id:
             kwargs.update({'id': doc_id})
         res = self.__es.index(**kwargs)
-        print(f"ES插入文档 ID: {res['_id']}")
+        logger.info(f"ES insert document with ID: {res['_id']}")
 
     # 批量插入文档
     def bulk_insert_documents(self, index_name:str, documents:List[dict]):
@@ -83,7 +106,7 @@ class ElasticStorage:
                 action.update({'_id': _id})
             actions.append(action)
         helpers.bulk(self.__es, actions)
-        print(f"ES批量插入了 {len(documents)} 条文档")
+        logger.info(f"ES bulk inserts {len(documents)} documents.")
 
     # 按id查询文档
     def get_doc_by_id(self, index_name:str, doc_ids:Union[List[Union[str, int]], Union[str, int]]):
@@ -95,7 +118,7 @@ class ElasticStorage:
         else:
             res = self.__es.get(index=index_name, id=doc_ids)
             results.append(res['_source'])
-        # print(f'ES文档: {results}')
+        # logger.info(f'ES文档: {results}')
         return results
     
     # 计数文档
@@ -118,7 +141,7 @@ class ElasticStorage:
             else:
                 output_data = doc
             results.append(output_data)
-            # print(f"ES文档 ID: {hit['_id']}, 内容: {output_data}")
+            # logger.info(f"ES文档 ID: {hit['_id']}, 内容: {output_data}")
         return results
 
 
@@ -129,6 +152,7 @@ class ElasticStorage:
         body.update(kwargs)
         res = self.__es.search(index=index_name, body=body)
         return self.select_output_data(res, output_fields)
+
 
     def multi_search(self, body:list, output_fields:list=None, index_name:str=None, is_flatten=True):
         """对同一索引同时发起多个查询。
@@ -196,7 +220,7 @@ class ElasticStorage:
                 else:
                     output_data = doc
                 results.append(output_data)
-                # print(f"ES文档 ID: {hit['_id']}, 内容: {output_data}")
+                # logger.info(f"ES文档 ID: {hit['_id']}, 内容: {output_data}")
             res = self.__es.scroll(scroll_id=scroll_id)
         self.__es.clear_scroll(scroll_id=scroll_id)
         return results
@@ -205,9 +229,9 @@ class ElasticStorage:
     def delete_index(self, index_name):
         if self.__es.indices.exists(index=index_name):
             self.__es.indices.delete(index=index_name)
-            print(f"ES索引 {index_name} 已删除")
+            logger.info(f"ES index {index_name} is deleted.")
         else:
-            print(f"ES索引 {index_name} 不存在")
+            logger.info(f"ES index {index_name} dosen't exist.")
 
     # 删除文档
     def delete_doc(self, index_name, doc_id=None, query:dict=None):
@@ -217,15 +241,15 @@ class ElasticStorage:
                 # res = self.count_documents(index_name)
                 if res:
                     res = self.__es.delete(index=index_name, id=doc_id)
-                    print(f"ES文档 {doc_id} 已删除")
+                    logger.info(f"ES document {doc_id} is deleted.")
             else:
                 res = self.search_documents(index_name, query=query, size=1)
                 # res = self.count_documents(index_name)
                 if res:
                     res = self.__es.delete_by_query(index=index_name, body={'query': query})
-                    print(f"ES删除了 {res['deleted']} 条文档")
+                    logger.info(f"ES deletes {res['deleted']} documents.")
         except NotFoundError as nf:
-            print('ES未找到待删除文档')
+            logger.info("ES can't find target documents to delete.")
 
 ES_STORAGE = ElasticStorage()
 
@@ -274,12 +298,12 @@ if __name__ == "__main__":
     #     "match": {"answer": "内容"}
     # }
     # res = es.search_documents(index_name, query=query)
-    # print(res)
+    # logger(res)
 
     # # 按id查询文档
     # ids = ['0b', '0c']
     # res = es.get_doc_by_id(index_name, ids)
-    # print(res)
+    # logger(res)
 
     # # 使用多重查询
     # def build_query(i):

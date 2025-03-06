@@ -159,6 +159,12 @@ class LlmApi:
         self.config = config or LLM_CONFIG
         self.endpoint = self.config.base_url
         self.semaphore = asyncio.Semaphore(self.config.semaphore)
+        if self.config.llm_type == 'openai':
+            self.client = openai.AsyncOpenAI(
+                api_key=self.config.token.get_secret_value(),
+                base_url=self.config.base_url,
+                timeout=self.config.timeout
+            )
 
     async def send_llm(self, content:Union[str, List[str]]):
         headers = {"Content-Type": "application/json"}
@@ -170,7 +176,7 @@ class LlmApi:
                     "content": content[:25000]
                 }
             ],
-            "max_tokens": 2048,
+            "max_tokens": self.config.max_tokens,
             "presence_penalty": 1.1,
             "temperature": 0.01,
         }
@@ -183,19 +189,37 @@ class LlmApi:
             semaphore=self.semaphore
         )
         return result['choices'][0]['message']['content']
+    
+
+    async def openai_chat(self, content:List[dict]):
+        response = await self.client.chat.completions.create(
+            messages=content, 
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            temperature=self.config.temperature
+        )
+        content = response.choices[0].message.content
+        return content
 
 
 if __name__ == '__main__':
     import time
 
-    docs = [
-        "This agent is developed using Peter Attia‘s publicly available contents and is not affiliated with or endorsed by Peter Attia."
-    ]
+    # docs = [
+    #     "This agent is developed using Peter Attia‘s publicly available contents and is not affiliated with or endorsed by Peter Attia."
+    # ]
 
-    emb = EmbeddingApi()
+    # emb = EmbeddingApi()
+    # st = time.time()
+    # res = asyncio.run(emb.openai_embedding(docs))
+    # et = time.time()
+    # print(et -st)
+    # print(res)
+
+    message = [{'role': 'user', 'content': 'How are you today?'}]
     llm = LlmApi()
     st = time.time()
-    res = asyncio.run(emb.openai_embedding(docs))
+    res = asyncio.run(llm.openai_chat(message))
     et = time.time()
     print(et -st)
     print(res)

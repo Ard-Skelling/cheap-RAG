@@ -1,8 +1,6 @@
-import sys
+import io
 import asyncio
-import re
-import json
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from typing import Dict
 from pathlib import Path
 
@@ -10,56 +8,37 @@ from pathlib import Path
 # local module
 from utils.logger import logger
 from utils.helpers import SnowflakeIDGenerator, AsyncDict, atimer
-from configs.config_cls import WorkerConfig, FileConvertConfig
-from configs.config import WORKER_CONFIG
-from utils.tool_calling import (
-    FileConverter, 
-    OcrApi,
-    LlmApi,
-    EmbeddingApi,
-    read_file
+from configs.config_cls import (
+    LocalEmbeddingConfig,
+    LlmConfig,
+    WorkerConfig
 )
-from modules.workflow.insert_workflow.mineru.data_cls import (
+from cheap_rag.modules.workflow.workflow_paper.config import (
+    LOCAL_EMBEDDING_CONFIG,
+    LLM_CONFIG,
+    WORKER_CONFIG
+)
+from utils.tool_calling.api_calling import LlmApi
+from utils.tool_calling.doc_processing import read_file
+from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
+from modules.storage import (
+    MILVUS_STORAGE,
+    ES_STORAGE,
+    MINIO_STORAGE
+)
+from modules.workflow.workflow_paper.data_cls import (
     Task,
-    TaskMeta,
-    GraphInfo,
-    AggChunk,
-    AtomChunk,
-    TableChunk,
-    MilvusDataV
+    TaskMeta
 )
-from modules.workflow import CoroTaskManager
-
-from modules.storage.milvus_storage import MILVUS_STORAGE
-from modules.storage.elastic_storage import ES_STORAGE
-
-
-# TODO: 启用新的Milvus存储对象
-MILVUS_STORAGE = PyMilvusInference(GLOBAL_CONFIG.vecdata_config)
+from modules.workflow.workflow_paper.db_opration import PAPER_KNOWLEDGE
+from modules.workflow.workflow_paper.insert_workflow.workflow_tasks import (
+    Chunking,
+    InsertPreprocessing
+)
+from modules.task_manager import CoroTaskManager
 
 
 class Worker:
-    """异步多进程的数据处理流程，实现了多文件处理的异步并行。
-    1. TODO: 文件格式转化（尚未纳入并行，需启用异步接口，在全局层面实现异步并行）
-    2. TODO: OCR（尚未纳入并行，同上）
-    3. OCR结果划分任务子集
-    4. 对于每个子集，异步并行执行以下操作
-        4.1 chunk规整，并写入chunk字典
-        4.2 chunk切分子句，识别文本、表格和图片
-            4.2.1 文本写入atom_chunk字典
-            4.2.2 图片暂不处理
-            4.2.3 表格处理如下
-                4.2.3.1 生成 question * 2
-                4.2.3.2 构造 question * 2
-                4.2.3.3 qa 对写入atom_chunk字典
-        4.3 构造 embedding batch，生成embedding，写入向量库
-    5. 归约子集数据，形成agg_chunks，chunks和atom_chunks三级数据，
-        展平写入ES。TODO: 分表存储，减少查询开销
-    6. 清理缓存，释放内存
-    7. TODO: 错误捕获并回滚失败任务，删除已写入数据
-    """
-        
-
     def __init__(
         self, 
         pool,
@@ -80,8 +59,7 @@ class Worker:
         self.semaphore = semaphore
         self.task_queue = asyncio.Queue()
         self.task_db = dict()
-        # self.done_tasks = done_tasks
-        # 初始化外部工具调用
+        # 初始化工具调用
         self.init_tools()
 
 
@@ -93,59 +71,20 @@ class Worker:
 
 
     def init_tools(self):
-        convertor_config = FileConvertConfig(
-            num_workers=self.config.num_workers
-        )
-        self.file_convertor = FileConverter(convertor_config)
-        self.ocr = OcrApi()
-        self.llm = LlmApi()
-        self.embedding = EmbeddingApi()
+        self.llm = LlmApi(LLM_CONFIG)
+        self.embedding = LocalEmbedding(LOCAL_EMBEDDING_CONFIG)
 
 
     @atimer
-    async def convert(self, task: Task):
-        raw_file_dir = self.file_convertor.config.raw_cache
-        out_put_dir = self.file_convertor.config.convert_cache
-        file_name = task.task_meta.file_name
-        raw_fp = raw_file_dir.joinpath(file_name)
-        suffix = raw_fp.suffix.lower()
-        # 在task_meta中记录文件本地路径
-        if suffix == '.pdf':
-            task.task_meta.pdf_fp = raw_fp
-        elif suffix in ['.doc', '.docx']:
-            task.task_meta.pdf_fp = out_put_dir.joinpath(file_name).with_suffix('.pdf')
-            _ = await self.file_convertor.a_convert_file(str(raw_fp), str(out_put_dir), 'pdf')
-            # 移除旧文件缓存
-            # raw_fp.unlink()
-        else:
-            # TODO: 处理其它类型的文件
-            raise ValueError(f'Unsupported file format: {suffix}. Please submit .doc, .docx or .pdf')
-        # 设定下一步处理流程
-        task.step = 'to_ocr'
-        print(f'Convert file successfully: {file_name}')
-        return task
+    async def standardize(self, task: Task):
+        # TODO: Standardize input file
+        raise NotImplementedError()
 
 
     @atimer
     async def to_ocr(self, task: Task):
-        pdf_fp = task.task_meta.pdf_fp
-        while not pdf_fp.exists():
-            await asyncio.sleep(0.5)
-        pdf_prefix = pdf_fp.stem
-        domain = task.task_meta.domain
-        pdf_bytes = read_file(str(pdf_fp))
-        ocr_res = await self.ocr.send_ocr(pdf_bytes, pdf_prefix, domain)
-        # Debug模式下，保存ocr结果到本地，便于分析
-        if GLOBAL_CONFIG.debug_mode:
-            fp = self.ocr.config.ocr_cache.joinpath(f'{pdf_prefix}.json')
-            with open(str(fp), 'w', encoding='utf-8') as f:
-                json.dump(ocr_res, f, indent=4, ensure_ascii=False)
-        # 将ocr结果暂存到task对象的result字段中，以便下一步使用
-        task.result = ocr_res
-        # 设定下一步处理流程
-        task.step = 'chunking'
-        print(f'OCR successfully: {pdf_fp.name}')
-        return task
+        # TODO: OCR and layout analysis
+        raise NotImplementedError()
 
 
     @atimer
@@ -153,48 +92,69 @@ class Worker:
         # Chunking任务相对复杂，用一个类来管理其下的处理逻辑
         chunker = Chunking(self.pool, task)
         file_name = task.task_meta.file_name
-        doc_key = str(Path(file_name).with_suffix('.md'))
-        # 获取待处理的OCR文档正文markdown
-        doc = task.result.pop(doc_key)
-        result = chunker.chunking(doc)
+        json_fp = task.task_meta.json_fp
+        doc = await read_file(str(json_fp))
+        result = chunker.chunking(file_name, doc)
         task.result = result
         task.step = 'insert'
-        print(f'Chunking successfully: {file_name}')
+        logger.info(f'Chunking successfully: {file_name}')
         return task
 
 
-    @atimer
-    async def delete(self, task: Task):
+    async def delete_file(self, task: Task):
         file_name = task.task_meta.file_name
         domain = task.task_meta.domain
-        del_mil = asyncio.to_thread(MILVUS_STORAGE._delete_data, [{"file_name": file_name}], domain)
-        del_es = asyncio.to_thread(ES_STORAGE.delete_doc, domain, query={"terms": {"file_name": [file_name]}})
-        await asyncio.gather(*[del_mil, del_es])
-        print(f'Delete previous data successfully: {domain} - {file_name}')
+        await PAPER_KNOWLEDGE.delete_file(domain, file_name)
+        logger.info(f'Delete previous data successfully: {domain} - {file_name}')
         return task
-
+    
     
     @atimer
     async def insert(self, task: Task):
+        chunks = task.result['chunks']
         agg_chunks = task.result['agg_chunks']
         atom_chunks = task.result['atom_chunks']
 
         domain, file_name = task.task_meta.domain, task.task_meta.file_name
         
         preprocessor = InsertPreprocessing(self.pool, self.llm, self.embedding)
-        aggs, text_atoms, table_atoms, emb_results = await preprocessor.process(domain, file_name, agg_chunks ,atom_chunks)
+        chunks, aggs, atoms, emb_results = await preprocessor.process(file_name, chunks, agg_chunks, atom_chunks)
         
         # 在插入前，删除旧文件，确保没有重复文件
-        task = await self.delete(task)
+        task = await self.delete_file(task)
 
         tasks = []
-        to_es = aggs + text_atoms + table_atoms
-        tasks.append(asyncio.to_thread(ES_STORAGE.bulk_insert_documents, domain, to_es))
-        tasks.append(asyncio.to_thread(MILVUS_STORAGE._insert_data, emb_results, domain, version=2))
+        tasks.append(asyncio.to_thread(ES_STORAGE.bulk_insert_documents, f'{domain}_raw', chunks))
+        tasks.append(asyncio.to_thread(ES_STORAGE.bulk_insert_documents, f'{domain}_agg', aggs))
+        tasks.append(asyncio.to_thread(ES_STORAGE.bulk_insert_documents, f'{domain}_atom', atoms))
+        tasks.append(asyncio.to_thread(MILVUS_STORAGE.insert, domain, emb_results))
         await asyncio.gather(*tasks)
 
-        print(f'Insert step finished: {file_name}')
+        logger.info(f'Insert step finished: {file_name}')
         # 声明任务生命周期结束
+        task.step = 'upload_object'
+        task.result = None
+        return task
+    
+
+    @atimer
+    async def upload_object(self, task: Task):
+        domain = task.task_meta.domain
+        file_name = task.task_meta.file_name
+        img_dir = task.task_meta.image_dir
+        imgs = img_dir.glob('*.jpg')
+        to_upload = []
+        for img in imgs:
+            obj_name = f'{domain}/{file_name}/images/{img.name}'
+            with open(str(img), 'rb') as f:
+                obj_bytes = io.BytesIO(f.read())
+            to_upload.append(asyncio.to_thread(
+                MINIO_STORAGE.put_object,
+                obj_name, 
+                obj_bytes,
+                MINIO_STORAGE.config.bucket_ocr
+            ))
+        await asyncio.gather(*to_upload)
         task.status = 'completed'
         task.result = 'success'
         task.step = 'FINISHED'
@@ -205,6 +165,12 @@ class Worker:
         task: Task = self.task_db[task_id]
         is_done = task.status in ['completed', 'failed']
         return is_done
+    
+    def free_cache(self, task:Task):
+        file_name = task.task_meta.file_name
+        raw_fp = self.config.raw_cache.joinpath(file_name)
+        raw_fp.unlink(missing_ok=True)
+        task.task_meta.pdf_fp.unlink(missing_ok=True)
     
 
     async def inner_loop(self):
@@ -234,21 +200,14 @@ class Worker:
                 self.task_db[task.task_id] = task
                 # 检测工作流是否完结（成功或失败），以决定是否继续下一流程
                 if self.is_completed(task.task_id):
-                    print(
+                    logger.info(
                         f'DataInsert task {task.task_id} done: {task.task_meta.file_name}\n'
                         f'Result: {task.result}'
                     )
                     # 将任务结果放入self.done_tasks，以便查阅
-                    # 外层函数会轮询done_tasks检查任务状态，返回执行情况。
-
-                    #
-                    # with self.plock:
                     task = self.task_db.pop(task.task_id)
                     # 清理缓存
-                    file_name = task.task_meta.file_name
-                    raw_fp = self.config.raw_cache.joinpath(file_name)
-                    raw_fp.unlink(missing_ok=True)
-                    task.task_meta.pdf_fp.unlink(missing_ok=True)
+                    # self.free_cache(task)
                     # # 退出任务循环
                     return task.result
                 else:
@@ -274,6 +233,11 @@ class InsertWorkflow:
         # TODO: 使用redis来存储任务
 
 
+    def init_tools(self):
+        self.embedding = LocalEmbedding()
+        self.llm = LlmApi()
+
+
     async def abstr_add_task(self, task_manager:CoroTaskManager, task_id, coro_func, *args, **kwargs):
         await task_manager.add_task(task_id, coro_func(*args, **kwargs))
 
@@ -282,7 +246,7 @@ class InsertWorkflow:
         task = Task(
             task_id=task_id,
             task_meta=task_meta,
-            step='convert',    # 设定任务起始环节
+            step='chunking',    # 设定任务起始环节
             status='pending'    # 设定任务起始状态
         )
         worker = Worker(
@@ -306,11 +270,11 @@ class InsertWorkflow:
     
 
     async def submit(self, task_manager:CoroTaskManager, pool:ProcessPoolExecutor, task_meta:TaskMeta):
-        task_id = self.id_gen.generate_id()
-        await self.pending_tasks.put(task_id, task_meta)
-        err = RuntimeError(f'{task_meta.file_name}超过最大重试次数')
+        err = RuntimeError(f'{task_meta.file_name} max error retries.')
         for _ in range(5):
             try:
+                task_id = self.id_gen.generate_id()
+                await self.pending_tasks.put(task_id, task_meta)
                 task_meta = await self.pending_tasks.pop(task_id)
                 if not task_meta:
                     raise ValueError(f'Task {task_id} is not in ongoing tasks.')
@@ -323,12 +287,68 @@ class InsertWorkflow:
         raise err
     
 
+async def execute_one(
+        workflow: InsertWorkflow, 
+        task_manager: CoroTaskManager, 
+        pool: ProcessPoolExecutor, 
+        task_meta: TaskMeta, 
+        log_path: Path
+    ):
+    file_name = task_meta.file_name
+    try:
+        result = await workflow.submit(task_manager, pool, task_meta)
+        message = f'{file_name}: {result}'
+        with open(str(log_path), 'a') as f:
+            f.write(f'{message}\n\n')
+    except Exception as err:
+        message = f'{file_name}: {err}'
+        with open(str(log_path), 'a') as f:
+            f.write(f'{message}\n\n')
+        raise err
+
+
+async def main():
+    raw_dir = Path('/root/nlp/rag/cheap-RAG/dev/output')
+    log_dir = Path('/root/nlp/rag/cheap-RAG/dev/logs')
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir.joinpath('insert.log')
+
+    tasks = []
+
+    for cl in raw_dir.rglob('*_content_list.json'):
+        f_stem = cl.stem.rstrip('_content_list')
+        data_dir = cl.parent
+        tasks.append(TaskMeta(
+            domain='longevity_paper_2502', 
+            file_name=f'{f_stem}.pdf',
+            json_fp=cl,
+            image_dir=data_dir.joinpath('images')
+        ))
+
+
+    task_manager = CoroTaskManager()
+    flow = InsertWorkflow(WORKER_CONFIG)
+
+    with ProcessPoolExecutor(6) as pool:
+        semaphore = asyncio.Semaphore(8)
+        async with semaphore:
+            futures = []
+            for task_meta in tasks:
+                futures.append(
+                    asyncio.create_task(
+                        execute_one(
+                            flow,
+                            task_manager, 
+                            pool, 
+                            task_meta,
+                            log_path
+                        )
+                    )
+                )
+            await asyncio.gather(*futures)
+
+
 if __name__ == '__main__':
-    ...
+    asyncio.run(main())
 
 
-    
-
-
-
-    

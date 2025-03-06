@@ -73,7 +73,7 @@ class MinioStorage:
             content_type=content_type,
             **kwargs
         )
-        logger.info(f'Uploaded to Minio: {object_name}')
+        logger.debug(f'Uploaded to Minio: {object_name}')
 
     def get_object(
             self,

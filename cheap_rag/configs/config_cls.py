@@ -71,7 +71,7 @@ class ESConfig(BaseSettings):
     pwd: SecretStr
 
 
-# File format config
+# Tools config
 class FileConvertConfig(BaseSettings):
     num_workers: int = max(int(multiprocessing.cpu_count() / 8), 1)
     # TODO：任务队列中的文件数量，超过的将会持久化到硬盘，之后再读取
@@ -88,16 +88,8 @@ class OcrConfig(BaseSettings):
     ocr_cache: Path = OCR_CACHE
 
 
-class WorkerConfig(BaseSettings):
-    num_workers: int = max(int(multiprocessing.cpu_count() / 8), 1)
-    num_semaphore:int = 16    # 全局并发量，并控制写工作流的任务队列上限
-    raw_cache: Path = RAW_FILE_CACHE
-    convert_cache: Path = FILE_CONVERT_CACHE
-    timeout: float = 99999
-
-
 class EmbeddingConfig(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore', env_prefix='emb_')
+    model_config = SettingsConfigDict(env_file='.env', extra='allow', env_prefix='emb_')
 
     emb_type: Literal['rest', 'openai'] = 'openai'
     base_url: str
@@ -110,28 +102,43 @@ class EmbeddingConfig(BaseSettings):
 
 
 class LocalEmbeddingConfig(BaseSettings):
-    emb_type: Literal['ONNX', 'TensorRT']
+    emb_type: Literal['cuda', 'cpu'] = 'cpu'
     model_dir: str
     model_path: str = ''
+    # Timeout in seconds
+    timeout: float = 300
+    batch_size: int = 16
+    semaphore: int = 10
 
 
 class LlmConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', extra='allow', env_prefix='llm_')
+
+    llm_type: Literal['rest', 'openai'] = 'openai'
     base_url: str
     timeout: float = 1800
     api: str = '/v1/chat/completions'
     semaphore: int = 16
     model: str = 'gpt-4o-mini'
+    token: SecretStr = ''
+    sys_prompt: str = 'You are a helpful assistant.'
+    temperature: float = 0.8
+    # Prompt + `max_tokens` <= the model's context length
+    max_tokens: int = 8192
+
+
+# Internal workflow config
+class WorkerConfig(BaseSettings):
+    num_workers: int = max(int(multiprocessing.cpu_count() / 8), 1)
+    num_semaphore:int = 16    # 全局并发量，并控制写工作流的任务队列上限
+    raw_cache: Path = RAW_FILE_CACHE
+    convert_cache: Path = FILE_CONVERT_CACHE
+    timeout: float = 3600
 
 
 class ChunkingConfig(BaseSettings):
-    agg_size: int = 3000    # 聚合的长文本长度阈值，是检索返回的大长片
-    agg_overlap: int = 500    # 设定大长片之间的交叠区间长度
-    atom_size: int = 200    # 原子文本的长度阈值，是召回时计算相似的对象
-    agg_table_md: bool = True    # 聚合片段中是否加入表格的markdown
-    agg_image_md: bool = False    # 聚合片段中是否加入图片的markdown
-    qa_for_table: bool = True    # 对表格生成问题
-    qa_for_image: bool = False    # 对图片生成问题
+    model_config = SettingsConfigDict(extra='allow')
 
 
 class InsertPreprocessingConfig(BaseSettings):
-    ...
+    model_config = SettingsConfigDict(extra='allow')

@@ -7,7 +7,7 @@ import datetime
 
 
 # 加盐，对抗彩虹表攻击
-SALT = os.getenv('SALT', '')
+SALT = os.getenv('SALT', 'aIie8i')
 
 def base64url_encode(data):
     """

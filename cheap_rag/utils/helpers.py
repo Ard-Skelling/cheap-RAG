@@ -3,16 +3,53 @@ import time
 import threading
 import hashlib
 import asyncio
+import importlib
+from functools import wraps
 
 
-def atimer(func):
-    async def wrapper(*args, **kwargs):
+# Local modules
+from utils.logger import logger
+
+
+def lazy_import(module_name):
+    """Lazy import lib into certain function. Example:
+    @lazy_import(torch)
+    def func_use_torch(a, b, torch=None):
+        result = torch.tensor([1, 2])
+        return result
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            module = importlib.import_module(module_name)
+            logger.debug(f'Dynamically imported: {module_name}')
+            kwargs[module_name] = module
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def ftimer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
         st = time.time()
-        result = await func(*args, **kwargs)
+        result = func(*args, **kwargs)
         et = time.time()
-        print(f'协程 {func.__name__} 运行时间： {et - st}')
+        logger.debug(f'function {func.__name__} cost time: {et - st}')
         return result
     return wrapper
+
+
+def atimer(coro):
+    @wraps(coro)
+    async def wrapper(*args, **kwargs):
+        st = time.time()
+        result = await coro(*args, **kwargs)
+        et = time.time()
+        logger.debug(f'coroutine {coro.__name__} cost time: {et - st}')
+        return result
+    return wrapper
+
 
 def b64_to_bytes(b64_data:str, encoding="utf-8"):
     return base64.b64decode(b64_data.encode(encoding))
@@ -27,6 +64,18 @@ generate_md5 = lambda text: hashlib.md5(text.encode('utf-8')).hexdigest()
 
 # metaclass singleton used for singleton instance
 class Singleton(type):
+    """Singleton metaclass. Make sure there is only one class instance exists. Example:
+
+    class MySingleton(metaclass=Singleton):
+        __allow_reinitialization = False    # Allow reinitiatialization or not
+
+        def __init__(self, value):
+            print("Initializing MySingleton")
+            self.value = value
+
+        def display(self):
+            print(f"Singleton value: {self.value}")
+    """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -108,23 +157,23 @@ class AsyncDict:
         async with self.lock:
             # 如果字典已满，等待直到有空间
             while len(self._dict) >= self.max_size:
-                print(f"Dictionary is full. Waiting to insert ({key}, {value})...")
+                logger.debug(f"Dictionary is full. Waiting to insert item {key}\n{value}")
                 await self.not_full.wait()  # 阻塞等待
 
             # 插入新键值对
             self._dict[key] = value
-            print(f"Inserted ({key}, {value}). Dictionary: {self._dict}")
+            logger.debug(f"Inserted item {key}\n{value}")
 
     async def remove(self, key):
         async with self.lock:
             if key in self._dict:
                 # 移除键值对
-                del self._dict[key]
-                print(f"Removed key: {key}. Dictionary: {self._dict}")
+                value = self._dict.pop(key)
+                logger.debug(f"Removed key: {key}\n{value}")
                 # 通知等待的协程字典未满
                 self.not_full.notify_all()
             else:
-                print(f"Key {key} not found in dictionary.")
+                logger.debug(f"Key {key} not found in dictionary.")
 
     async def get(self, key):
         async with self.lock:
@@ -151,4 +200,4 @@ class AsyncDict:
 if __name__ == "__main__":
     generator = SnowflakeIDGenerator(machine_id=1)
     for _ in range(10):
-        print(generator.generate_id())
+        logger.info(generator.generate_id())

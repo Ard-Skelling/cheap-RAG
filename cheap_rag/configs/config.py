@@ -18,9 +18,12 @@ from configs.config_cls import (
 )
 
 
+MACHINE_ID = 1
+
+
 LOGGER_CONFIG = LoggerConfig(
     file_name='cheap_rag.log',
-    level='DEBUG',
+    level='INFO',
     when='midnight',
     interval=1,
     backup_count=90,
@@ -71,9 +74,10 @@ EMBEDDING_CONFIG = EmbeddingConfig(
 
 
 LOCAL_EMBEDDING_CONFIG = LocalEmbeddingConfig(
-    emb_type='ONNX',
-    model_dir='/root/model-params/multilingual-e5-large-instruct/onnx',
-    model_path='/root/model-params/multilingual-e5-large-instruct/onnx/model.onnx'
+    emb_type='cuda',
+    model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct',
+    model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx',
+    batch_size=16
 )
 
 
@@ -82,7 +86,8 @@ LLM_CONFIG = LlmConfig(
     timeout=1800,
     api='/v1/chat/completions',
     semaphore=16,
-    model='gpt-4o-mini'
+    model='gpt-4o-mini',
+    token=getenv('AIMLAPI_KEY')
 )
 
 

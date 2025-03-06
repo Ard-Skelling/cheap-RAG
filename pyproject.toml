@@ -22,16 +22,21 @@ pydantic = "^2.10.6"
 elasticsearch = "^8.15.1"
 openai = "^1.64.0"
 aiofiles = "^24.1.0"
-onnxruntime = {version = "^1.20.1", extras = ["gpu", "cpu"]}
+onnxruntime = {version = "^1.20.1", extras = ["cpu"]}
 torch = {version = "^2.1.0", extras = ["gpu"]}
 onnx = {version = "^1.17.0", extras = ["gpu"]}
 transformers = {version = "^4.46.0", extras = ["gpu", "cpu"]}
 pydantic-settings = "^2.8.0"
-tensorrt = {version = "^10.8.0.43", extras = ["gpu"]}
+pycuda = {version = "^2025.1", extras = ["gpu"]}
+onnxruntime-gpu = {version = "^1.20.1", extras = ["gpu"]}
+beautifulsoup4 = "^4.13.3"
 
 [tool.poetry.extras]
-gpu = ["onnxruntime", "torch", "onnx", "transformers", "tensorrt"]
+gpu = ["onnxruntime-gpu", "torch", "onnx", "transformers", "pycuda"]
 cpu = ["onnxruntime", "transformers"]
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
