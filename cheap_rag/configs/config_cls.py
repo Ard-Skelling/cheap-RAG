@@ -134,6 +134,7 @@ class WorkerConfig(BaseSettings):
     raw_cache: Path = RAW_FILE_CACHE
     convert_cache: Path = FILE_CONVERT_CACHE
     timeout: float = 3600
+    delete_old: bool = True
 
 
 class ChunkingConfig(BaseSettings):
@@ -142,3 +143,7 @@ class ChunkingConfig(BaseSettings):
 
 class InsertPreprocessingConfig(BaseSettings):
     model_config = SettingsConfigDict(extra='allow')
+
+
+class QueryConfig(BaseSettings):
+    semaphore: int = 200

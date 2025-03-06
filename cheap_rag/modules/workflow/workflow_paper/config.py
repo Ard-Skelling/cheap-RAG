@@ -10,7 +10,8 @@ from configs.config_cls import (
     LlmConfig,
     WorkerConfig,
     ChunkingConfig,
-    InsertPreprocessingConfig
+    InsertPreprocessingConfig,
+    QueryConfig
 )
 
 
@@ -78,7 +79,9 @@ LLM_CONFIG = LlmConfig(
 
 WORKER_CONFIG = WorkerConfig(
     num_workers=4,
-    num_semaphore=16
+    num_semaphore=16,
+    timeout=9999,
+    delete_old=True
 )
 
 
@@ -99,4 +102,9 @@ CHUNKING_CONFIG = PaperChunkingConfig(
 
 
 IPP_CONFIG = PaperInsertPreprocessingConfig()
+
+
+QUERY_CONFIG = QueryConfig(
+    semaphore=200
+)
 

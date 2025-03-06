@@ -89,16 +89,3 @@ LLM_CONFIG = LlmConfig(
     model='gpt-4o-mini',
     token=getenv('AIMLAPI_KEY')
 )
-
-
-# workflow config
-FILE_CONVERT_CONFIG = FileConvertConfig()
-
-
-WORKER_CONFIG = WorkerConfig()
-
-
-CHUNKING_CONFIG = ChunkingConfig()
-
-
-INSERT_PRE_CONFIG = InsertPreprocessingConfig()
