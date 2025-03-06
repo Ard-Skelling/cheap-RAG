@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "cheap-rag"
+version = "0.1.0"
+description = "A cheap but strong RAG framework."
+authors = ["Louis Jin <lululouisjin@gmail.com>"]
+license = "GNU General Public License v3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+aiohttp = ">=3.9.3"
+fastapi = ">=0.115.8,<0.116.0"
+uvicorn = ">=0.34.0,<0.35.0"
+numpy = "^2.2.3"
+pandas = "^2.2.3"
+openpyxl = "^3.1.5"
+xlrd = "^2.0.1"
+pymilvus = "^2.4.0"
+tqdm = "^4.67.1"
+minio = "^7.2.15"
+pydantic = "^2.10.6"
+elasticsearch = "^8.15.1"
+openai = "^1.64.0"
+aiofiles = "^24.1.0"
+onnxruntime = {version = "^1.20.1", extras = ["cpu"]}
+torch = {version = "^2.1.0", extras = ["gpu"]}
+onnx = {version = "^1.17.0", extras = ["gpu"]}
+transformers = {version = "^4.46.0", extras = ["gpu", "cpu"]}
+pydantic-settings = "^2.8.0"
+pycuda = {version = "^2025.1", extras = ["gpu"]}
+onnxruntime-gpu = {version = "^1.20.1", extras = ["gpu"]}
+beautifulsoup4 = "^4.13.3"
+
+[tool.poetry.extras]
+gpu = ["onnxruntime-gpu", "torch", "onnx", "transformers", "pycuda"]
+cpu = ["onnxruntime", "transformers"]
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
