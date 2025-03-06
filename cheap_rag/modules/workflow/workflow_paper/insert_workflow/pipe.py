@@ -121,7 +121,8 @@ class Worker:
         chunks, aggs, atoms, emb_results = await preprocessor.process(file_name, chunks, agg_chunks, atom_chunks)
         
         # 在插入前，删除旧文件，确保没有重复文件
-        task = await self.delete_file(task)
+        if self.config.delete_old:
+            task = await self.delete_file(task)
 
         tasks = []
         tasks.append(asyncio.to_thread(ES_STORAGE.bulk_insert_documents, f'{domain}_raw', chunks))
@@ -166,6 +167,7 @@ class Worker:
         is_done = task.status in ['completed', 'failed']
         return is_done
     
+
     def free_cache(self, task:Task):
         file_name = task.task_meta.file_name
         raw_fp = self.config.raw_cache.joinpath(file_name)
