@@ -3,7 +3,7 @@ name = "cheap-rag"
 version = "0.1.0"
 description = "A cheap but strong RAG framework."
 authors = ["Louis Jin <lululouisjin@gmail.com>"]
-license = "GNU General Public License v3.0"
+license = "Apache License 2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
