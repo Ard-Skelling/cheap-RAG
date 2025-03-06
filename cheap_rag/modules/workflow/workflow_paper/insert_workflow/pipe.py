@@ -347,6 +347,8 @@ async def main():
                 )
             await asyncio.gather(*futures)
 
+    print('All tasks are finished.')
+
 
 if __name__ == '__main__':
     asyncio.run(main())

@@ -192,8 +192,7 @@ class Chunking:
             chunk_index:int, 
             file_name:str, 
             block:dict, 
-            has_title:bool=False,
-            fusion:str=''
+            has_title:bool=False
         ):
         chunk_type = block.get('type', 'text')
         if chunk_type == 'text':
@@ -212,7 +211,7 @@ class Chunking:
                 self.chunks.append(chunk)
         else:
             self.chunks.append(chunk)
-        return chunk, has_title, fusion
+        return chunk, has_title
     
 
     def build_general_atom(self, file_name:str, agg_index:int, text:str, raw_type=''):
@@ -407,35 +406,23 @@ class Chunking:
         is_last
     ):
         # Exam to build atomic chunk or not
+        # Non-text chunk
         if chunk.chunk_type not in {'title', 'text'}:
-            build_atom_exam = True
-            # Build previous text atomic chunk if there is
-            if temp_atom:
-                self.build_text_atom(file_name, chunk_size, temp_atom, belong_index)
-                atom_cumu = 0
-                temp_atom = ''
+            self.build_atom(file_name, belong_index, chunk)
+        # Text chunk
         else:
             # Build atomic chunk before header-content block
-            if chunk.text_level != 0 and temp_atom:
+            if chunk.text_level != 0 and atom_cumu > 0.7 * self.atom_threshold:
                 self.build_text_atom(file_name, chunk_size, temp_atom, belong_index)
                 atom_cumu = 0
                 temp_atom = ''
-            if atom_cumu + chunk_size >= self.atom_threshold:
-                build_atom_exam = True
-            else:
-                build_atom_exam = False
-        # Build atomic chunk
-        if build_atom_exam:
-            self.build_atom(file_name, belong_index, chunk, atom_cumu, cache_text=temp_atom)
-            atom_cumu = 0
-            temp_atom = ''
-        # Cumulate text for future atomic chunk
-        else:
+            # Exam atomic chunk threshold
             atom_cumu += chunk_size
             temp_atom = f'{temp_atom}{chunk_md}\n\n'
-        # Deal with the residual temp_atom text
-        if is_last and temp_atom:
-            self.build_text_atom(file_name, atom_cumu, temp_atom, belong_index)
+            if atom_cumu >= self.atom_threshold:
+                self.build_text_atom(file_name, chunk_size, temp_atom, belong_index)
+                atom_cumu = 0
+                temp_atom = ''
         return atom_cumu, temp_atom
 
 
@@ -458,8 +445,8 @@ class Chunking:
 
         for i, block in enumerate(document):
             is_last = i == chunks_len - 1
-            chunk, has_title, fusion = self.build_chunk(
-                belong_index, i + 1, file_name, block, has_title, fusion
+            chunk, has_title = self.build_chunk(
+                belong_index, i + 1, file_name, block, has_title
             )
 
             # Ignore chunk exam
