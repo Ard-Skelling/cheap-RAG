@@ -104,7 +104,7 @@ class HybridSearch:
         es_resp = [e[0] for e in es_resp if e]
         return es_resp
     
-    
+
     async def vector_search(
         self, 
         domain:str, 
@@ -154,6 +154,26 @@ class HybridSearch:
         return es_res
 
 
+    async def replace_file_name(self, domain:str, results:List[dict]):
+        file_name_map = dict()
+        for record in results:
+            hash_name = record['file_name']
+            if hash_name in file_name_map:
+                file_name = file_name_map[hash_name]
+            else:
+                query = {
+                    'bool': {'must': [
+                        {'term': {'file_name': hash_name}},
+                        {'term': {'chunk_type': 'title'}}
+                    ]}
+                }
+                result = await asyncio.to_thread(ES_STORAGE.search_documents, f'{domain}_raw', query, output_fields=['text'], size=1)
+                file_name = result[0]['text'].strip()
+                file_name_map[hash_name] = file_name
+            record['file_name'] = file_name
+        return results
+    
+
     async def search(
         self, 
         query:str, 
@@ -187,6 +207,7 @@ class HybridSearch:
             if has_context:
                 chunks = await self.parallel_recall(domain, output_fields, chunks)
             
+            chunks = await self.replace_file_name(domain, chunks)
             return chunks
 
         except Exception as err:
