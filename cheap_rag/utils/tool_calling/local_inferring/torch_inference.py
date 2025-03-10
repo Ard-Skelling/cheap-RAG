@@ -42,7 +42,7 @@ class LocalEmbedding(metaclass=Singleton):
         return result
 
 
-    # @ftimer
+    @ftimer
     def embedding(self, input_texts):
         with torch.no_grad():
             # batch_size = 16 may cost 6-8G GPU memory
