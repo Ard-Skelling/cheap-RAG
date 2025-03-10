@@ -113,7 +113,7 @@ class Chunking:
             agg_index=agg_index,
             chunk_index=chunk_index,
             page_index=page_idx,
-            text=text,
+            text=text.strip(),
             text_level=text_level,
             chunk_type=chunk_type
         )
@@ -132,7 +132,7 @@ class Chunking:
             agg_index=agg_index,
             chunk_index=chunk_index,
             page_index=page_idx,
-            text=text,
+            text=text.strip(),
             text_format=text_format
         )
         return chunk
@@ -152,8 +152,8 @@ class Chunking:
             chunk_index=chunk_index,
             page_index=page_idx,
             url=url,
-            caption=caption,
-            footnote=footnote
+            caption=caption.strip(),
+            footnote=footnote.strip()
         )
         # convert list field inot str
         chunk.list2str()
@@ -177,9 +177,9 @@ class Chunking:
             chunk_index=chunk_index,
             page_index=page_idx,
             url=url,
-            caption=caption,
-            footnote=footnote,
-            text=text
+            caption=caption.strip(),
+            footnote=footnote.strip(),
+            text=text.strip()
         )
         # convert list field inot str
         chunk.list2str()
@@ -284,18 +284,6 @@ class Chunking:
                 text=agg_text,
                 chunk_type=agg_t
             )
-
-    # def chunking(self, file_name, document: List[dict]):
-    #     has_title = False
-    #     for i, block in enumerate(document):
-    #         chunk_index = i + 1
-    #         chunk, has_title = self.build_chunk(chunk_index, file_name, block, has_title=has_title)
-    #         self.build_atom(file_name, chunk)
-    #     result = {
-    #         'agg_chunks': self.agg_chunks,
-    #         'atom_chunks': self.atom_chunks
-    #     }
-    #     return result
 
 
     def ignore_exam(self, chunk:Union[Chunk, TextChunk], ignore_count=0):

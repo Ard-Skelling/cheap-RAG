@@ -89,3 +89,5 @@ LLM_CONFIG = LlmConfig(
     model='gpt-4o-mini',
     token=getenv('AIMLAPI_KEY')
 )
+
+FILE_CONVERT_CONFIG = FileConvertConfig()
