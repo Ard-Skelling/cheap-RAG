@@ -2,6 +2,19 @@
 A cheap but strong RAG framework.
 
 
+## Workflow
+### Collection Level Operation
+- Create of data collections, indices
+- Query for collection level
+- Drop colllection
+
+### Data Level Operation
+There are two main workflow for data level operation:
+- Insert workflow
+- Query workflow
+
+![data_workflow](cheap_rag/assets/images/RAG_workflow.jpg)
+
 ## GPU extras
 The inference can be accelerated by Nvidia GPU hardware with TensorRT.
 
