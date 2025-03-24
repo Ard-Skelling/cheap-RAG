@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-from typing import Union, List, Literal
+from typing import Any, Union, List, Literal
 from datetime import datetime
 from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator, Field
@@ -21,6 +21,8 @@ class TaskMeta(TaskData):
     pdf_fp: Path = None
     json_fp: Path = None
     image_dir: Path = None
+    result: Any = None
+    init_step: str = None
 
 
 class Task(BaseModel):
@@ -29,7 +31,7 @@ class Task(BaseModel):
     # 当前待执行的任务环节，对应Worker中的类方法名
     step: str
     status: Literal['pending', 'processing', 'completed', 'failed']
-    result: dict = None
+    result: Any = None
 
 
 class FileData(TaskData):

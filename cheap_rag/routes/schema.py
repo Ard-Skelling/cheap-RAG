@@ -1,5 +1,5 @@
 from os import getenv
-from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator, ValidationError
 from typing import List, Union, Optional, Literal
 
 
@@ -46,7 +46,7 @@ class FileNameSearchEngineRequest(VecBaseModel):
 
 
 class DataInsertEngineRequest(VecBaseModel):
-    document: str = Field(..., description="Base64 encoded document content")
+    file_bs64: str = Field(..., description="Base64 encoded document content")
     domain: str = Field(..., description="collection for the data to insert")
     file_name: str = Field(..., min_length=1, max_length=255, description="Name of the file")
     file_meta: Union[dict, None] = Field(None,  description="file meta infomation")
@@ -77,6 +77,31 @@ class ObjStorageEngineRequest(VecBaseModel):
         if values.method == 'put' and not values.obj_base64:
             raise ValueError('obj_base64 is empty when putting to Minio.')
         return values
+    
+
+class OCRRequest(VecBaseModel):
+    file_name: str
+    file_bs64: str
+    token: str
+
+    # Inner remote API, need token verification
+    @field_validator('token')
+    def validate_output_fields(cls, v):
+        if v != getenv('LOCAL_OCR_TOKEN'):
+            raise ValueError('Wrong embedding token.')
+        return v
+        
+
+class EmbeddingRequest(VecBaseModel):
+    contents: Union[List[str], str]
+    token: str = Field()
+
+    # Inner remote API, need token verification
+    @field_validator('token')
+    def validate_output_fields(cls, v):
+        if v != getenv('LOCAL_EMB_TOKEN'):
+            raise ValueError('Wrong embedding token.')
+        return v
     
 
 class APIResponse(BaseModel):

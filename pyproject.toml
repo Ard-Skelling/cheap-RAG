@@ -27,12 +27,11 @@ torch = {version = "^2.1.0", extras = ["gpu"]}
 onnx = {version = "^1.17.0", extras = ["gpu"]}
 transformers = {version = "^4.46.0", extras = ["gpu", "cpu"]}
 pydantic-settings = "^2.8.0"
-pycuda = {version = "^2025.1", extras = ["gpu"]}
 onnxruntime-gpu = {version = "^1.20.1", extras = ["gpu"]}
 beautifulsoup4 = "^4.13.3"
 
 [tool.poetry.extras]
-gpu = ["onnxruntime-gpu", "torch", "onnx", "transformers", "pycuda"]
+gpu = ["onnxruntime-gpu", "torch", "onnx", "transformers"]
 cpu = ["onnxruntime", "transformers"]
 
 [tool.poetry.group.dev.dependencies]
