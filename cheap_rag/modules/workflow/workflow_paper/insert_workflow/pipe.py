@@ -1,5 +1,6 @@
 import io
 import asyncio
+import shutil
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from typing import Dict
 from pathlib import Path
@@ -182,7 +183,8 @@ class Worker:
         file_name = task.task_meta.file_name
         raw_fp = self.config.raw_cache.joinpath(file_name)
         raw_fp.unlink(missing_ok=True)
-        task.task_meta.pdf_fp.unlink(missing_ok=True)
+        ocr_dir = self.ocr.config.ocr_cache.joinpath(Path(file_name).stem)
+        shutil.rmtree(str(ocr_dir))
     
 
     async def inner_loop(self):
@@ -219,7 +221,7 @@ class Worker:
                     # 将任务结果放入self.done_tasks，以便查阅
                     task = self.task_db.pop(task.task_id)
                     # 清理缓存
-                    # self.free_cache(task)
+                    self.free_cache(task)
                     # # 退出任务循环
                     return task.result
                 else:
