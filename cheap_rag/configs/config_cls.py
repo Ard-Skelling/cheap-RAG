@@ -84,7 +84,7 @@ class FileConvertConfig(BaseSettings):
 class OcrConfig(BaseSettings):
     base_url: str
     timeout: float = 3600
-    sema_process: int = 16    # 提交ocr的并发量
+    sema_process: int = 4    # 提交ocr的并发量
     ocr_cache: Path = OCR_CACHE
 
 
@@ -107,8 +107,10 @@ class LocalEmbeddingConfig(BaseSettings):
     model_path: str = ''
     # Timeout in seconds
     timeout: float = 300
-    batch_size: int = 16
+    batch_size: int = 64
     semaphore: int = 10
+    # Use heartbeat interval to cumulate processing batch
+    heartbeat: float = 0.1
 
 
 class LlmConfig(BaseSettings):

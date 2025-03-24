@@ -1,9 +1,12 @@
+import io
 import asyncio
 import aiohttp
 import ssl
 import base64
 import time
+import tarfile
 import openai
+from os import getenv
 from urllib.parse import urljoin
 from pathlib import Path
 from typing import Union, List
@@ -61,6 +64,8 @@ async def fetch(
                                 result = await resp.json()
                             elif return_type == 'text':
                                 result = await resp.text()
+                            elif return_type == 'content':
+                                result = await resp.read()
                             else:
                                 raise ValueError(f'Unpupported return_type: {return_type}')
                             return result
@@ -77,31 +82,34 @@ async def fetch(
 class OcrApi:
     def __init__(self, config:OcrConfig=None) -> None:
         self.config = config or OCR_CONFIG
-        self.sema_predict = asyncio.Semaphore(self.config.sema_predict)
-        self.sema_download = asyncio.Semaphore(self.config.sema_download)
+        self.semaphore = asyncio.Semaphore(self.config.sema_process)
 
 
-    async def send_ocr(self, pdf_bytes:bytes, pdf_prefix:str, domain=None):
-        url = urljoin(f'http://{self.config.host}:{self.config.port}', self.config.predict_api)
-        # 使用minio后的OCR接口，启用时间2024-12-06
-        if self.config.use_minio:
-            document = base64.b64encode(pdf_bytes).decode("utf-8")
-            pdf_name = f'{pdf_prefix}.pdf'
-            data = {"collection_name":domain, "file": document, "file_name": pdf_name}
-            result = await fetch(url, data, self.__class__.__name__, self.config.timeout, semaphore=self.sema_predict)
-        # 旧OCR接口
-        else:
-            data = aiohttp.FormData()
-            data.add_field(
-                name='files',
-                value=pdf_bytes,
-                filename=f'{pdf_prefix}.pdf',
-                content_type="application/pdf"
-            )
-            result = await fetch(url, data, self.__class__.__name__, self.config.timeout, semaphore=self.sema_predict)
-        return result
+    async def send_ocr(self, pdf_bs64:str, pdf_prefix:str):
+        url = self.config.base_url
+        pdf_name = f'{pdf_prefix}.pdf'
+        data = {"file_name": pdf_name, "file_bs64": pdf_bs64, 'token': getenv('LOCAL_OCR_TOKEN')}
+        result = await fetch(
+            url, 
+            data, 
+            self.__class__.__name__, 
+            self.config.timeout, 
+            semaphore=self.semaphore, 
+            return_type='content'
+        )
+        # Extract the responsed tar.gz file
+        tar_gz_file = tarfile.open(fileobj=io.BytesIO(result), mode="r:gz")
+        cache_dir = self.config.ocr_cache
+        extract_path = cache_dir.joinpath(pdf_prefix)
+        extract_path.mkdir(parents=True, exist_ok=True)
+        # <pdf_prefix>
+        # |--file_name.json
+        # |--images
+        #     |--image_0.jpg
+        #     |--image_1.jpg
+        tar_gz_file.extractall(str(extract_path))
+
     
-
     async def sned_dir(self, input_dir:str, save_dir:str):
         input_dir = Path(input_dir)
         save_dir = Path(save_dir)
@@ -204,6 +212,8 @@ class LlmApi:
 
 if __name__ == '__main__':
     import time
+    from utils.helpers import bytes_to_b64
+    import requests
 
     # docs = [
     #     "This agent is developed using Peter Attia‘s publicly available contents and is not affiliated with or endorsed by Peter Attia."
@@ -216,13 +226,23 @@ if __name__ == '__main__':
     # print(et -st)
     # print(res)
 
-    message = [{'role': 'user', 'content': 'How are you today?'}]
-    llm = LlmApi()
-    st = time.time()
-    res = asyncio.run(llm.openai_chat(message))
-    et = time.time()
-    print(et -st)
-    print(res)
+    # message = [{'role': 'user', 'content': 'How are you today?'}]
+    # llm = LlmApi()
+    # st = time.time()
+    # res = asyncio.run(llm.openai_chat(message))
+    # et = time.time()
+    # print(et -st)
+    # print(res)
+
+
+    fp = '/root/nlp/rag/cheap-RAG/dev/papers/03e8f6a34adfe5506c86edea58c1c55ce12b0141.pdf'
+    with open(fp, 'rb') as f:
+        pdf_bytes = f.read()
+    pdf_bs64 = bytes_to_b64(pdf_bytes)
+    ocr = OcrApi()
+    res = asyncio.run(ocr.send_ocr(pdf_bs64, 'test.pdf'))
+
+
 
     ...
 

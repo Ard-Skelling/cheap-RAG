@@ -152,11 +152,13 @@ class Chunking:
             chunk_index=chunk_index,
             page_index=page_idx,
             url=url,
-            caption=caption.strip(),
-            footnote=footnote.strip()
+            caption=caption,
+            footnote=footnote
         )
         # convert list field inot str
         chunk.list2str()
+        chunk.caption = chunk.caption.strip()
+        chunk.footnote = chunk.footnote.strip()
         return chunk
 
     
@@ -177,12 +179,14 @@ class Chunking:
             chunk_index=chunk_index,
             page_index=page_idx,
             url=url,
-            caption=caption.strip(),
-            footnote=footnote.strip(),
+            caption=caption,
+            footnote=footnote,
             text=text.strip()
         )
         # convert list field inot str
         chunk.list2str()
+        chunk.caption = chunk.caption.strip()
+        chunk.footnote = chunk.footnote.strip()
         return chunk
     
 

@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings
 # local module
 from configs.config_cls import (
     LocalEmbeddingConfig,
+    OcrConfig,
     LlmConfig,
     WorkerConfig,
     ChunkingConfig,
@@ -61,6 +62,13 @@ QUERY_EMBEDDING_CONFIG = LocalEmbeddingConfig(
     emb_type='cpu',
     model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx',
     model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx'
+)
+
+
+OCR_CONFIG = OcrConfig(
+    base_url='http://216.144.178.146:48308/v1/ocr',
+    timeout=3600,
+    sema_process=4
 )
 
 

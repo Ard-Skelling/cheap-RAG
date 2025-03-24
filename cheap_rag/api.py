@@ -3,13 +3,17 @@ from fastapi import FastAPI
 
 
 # local module
+from routes.insert import router as insert_router
 from routes.query import router as query_router
+from cheap_rag.routes.tool import router as tool_router
 
 
 # API
 app = FastAPI()
 
 app.include_router(query_router, prefix='/api/v1/query', tags=['query'])
+app.include_router(tool_router, prefix='/api/v1/tool', tags=['tool'])
+app.include_router(insert_router, prefix='/api/v1/insert', tags=['insert'])
 
 
 @app.get("/test_get")

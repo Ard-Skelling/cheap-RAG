@@ -56,9 +56,9 @@ ES_CONFIG = ESConfig(
 
 # tools config
 OCR_CONFIG = OcrConfig(
-    base_url='http://127.0.0.1:20771',
+    base_url='http://216.144.178.146:48308/v1/ocr',
     timeout=3600,
-    sema_process=16
+    sema_process=4
 )
 
 
@@ -77,7 +77,7 @@ LOCAL_EMBEDDING_CONFIG = LocalEmbeddingConfig(
     emb_type='cuda',
     model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct',
     model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx',
-    batch_size=16
+    batch_size=64
 )
 
 

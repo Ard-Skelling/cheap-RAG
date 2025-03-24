@@ -15,10 +15,11 @@ from configs.config_cls import (
 )
 from cheap_rag.modules.workflow.workflow_paper.config import (
     LOCAL_EMBEDDING_CONFIG,
+    OCR_CONFIG,
     LLM_CONFIG,
     WORKER_CONFIG
 )
-from utils.tool_calling.api_calling import LlmApi
+from utils.tool_calling.api_calling import LlmApi, OcrApi
 from utils.tool_calling.doc_processing import read_file
 from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
 from modules.storage import (
@@ -71,6 +72,7 @@ class Worker:
 
 
     def init_tools(self):
+        self.ocr = OcrApi(OCR_CONFIG)
         self.llm = LlmApi(LLM_CONFIG)
         self.embedding = LocalEmbedding(LOCAL_EMBEDDING_CONFIG)
 
@@ -83,8 +85,16 @@ class Worker:
 
     @atimer
     async def to_ocr(self, task: Task):
-        # TODO: OCR and layout analysis
-        raise NotImplementedError()
+        pdf_stem = Path(task.task_meta.file_name).stem
+        pdf_bs64 = task.result
+        await self.ocr.send_ocr(pdf_bs64, pdf_stem)
+        task.task_meta.json_fp = self.ocr.config.ocr_cache \
+            .joinpath(pdf_stem) \
+            .joinpath(f'{pdf_stem}.json')
+        task.step = 'chunking'
+        # free pdf base64 memory
+        task.task_meta.result = None
+        return task
 
 
     @atimer
@@ -142,7 +152,7 @@ class Worker:
     async def upload_object(self, task: Task):
         domain = task.task_meta.domain
         file_name = task.task_meta.file_name
-        img_dir = task.task_meta.image_dir
+        img_dir = self.ocr.config.ocr_cache.joinpath(Path(file_name).stem)
         imgs = img_dir.glob('*.jpg')
         to_upload = []
         for img in imgs:
@@ -244,12 +254,13 @@ class InsertWorkflow:
         await task_manager.add_task(task_id, coro_func(*args, **kwargs))
 
 
-    async def execute_task(self, pool, task_id, task_meta):
+    async def execute_task(self, pool, task_id, task_meta:TaskMeta):
         task = Task(
             task_id=task_id,
             task_meta=task_meta,
-            step='chunking',    # 设定任务起始环节
-            status='pending'    # 设定任务起始状态
+            step=task_meta.init_step,    # 设定任务起始环节
+            status='pending',    # 设定任务起始状态
+            result=task_meta.result
         )
         worker = Worker(
             pool,

@@ -19,6 +19,8 @@ There are two main workflow for data level operation:
 The inference can be accelerated by Nvidia GPU hardware with TensorRT.
 
 ### Install system dependencies
+**(Optional)**: If using docker container, please intall [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) first.
+
 1. [Install CUDA](https://developer.nvidia.com/cuda-toolkit-archive) according to the CUDA installation instructions.
 2. [Download](https://docs.nvidia.com/deeplearning/tensorrt/latest/installing-tensorrt/installing.html#download) the TensorRT local repo file that matches the Ubuntu version and CPU architecture you are using.
 3. Install TensorRT from the Debian local repo package. Replace ubuntuxx04, 10.x.x, and cuda-x.x with your specific OS, TensorRT, and CUDA versions. For ARM SBSA and JetPack users, replace amd64 with arm64. JetPack users also need to replace nv-tensorrt-local-repo with nv-tensorrt-local-tegra-repo.
