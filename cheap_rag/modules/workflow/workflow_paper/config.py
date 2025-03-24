@@ -66,7 +66,7 @@ QUERY_EMBEDDING_CONFIG = LocalEmbeddingConfig(
 
 
 OCR_CONFIG = OcrConfig(
-    base_url='http://216.144.178.146:48308/v1/ocr',
+    base_url='http://127.0.0.1:48308/v1/ocr',
     timeout=3600,
     sema_process=4
 )

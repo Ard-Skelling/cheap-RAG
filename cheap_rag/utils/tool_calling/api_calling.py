@@ -211,38 +211,5 @@ class LlmApi:
 
 
 if __name__ == '__main__':
-    import time
-    from utils.helpers import bytes_to_b64
-    import requests
-
-    # docs = [
-    #     "This agent is developed using Peter Attia‘s publicly available contents and is not affiliated with or endorsed by Peter Attia."
-    # ]
-
-    # emb = EmbeddingApi()
-    # st = time.time()
-    # res = asyncio.run(emb.openai_embedding(docs))
-    # et = time.time()
-    # print(et -st)
-    # print(res)
-
-    # message = [{'role': 'user', 'content': 'How are you today?'}]
-    # llm = LlmApi()
-    # st = time.time()
-    # res = asyncio.run(llm.openai_chat(message))
-    # et = time.time()
-    # print(et -st)
-    # print(res)
-
-
-    fp = '/root/nlp/rag/cheap-RAG/dev/papers/03e8f6a34adfe5506c86edea58c1c55ce12b0141.pdf'
-    with open(fp, 'rb') as f:
-        pdf_bytes = f.read()
-    pdf_bs64 = bytes_to_b64(pdf_bytes)
-    ocr = OcrApi()
-    res = asyncio.run(ocr.send_ocr(pdf_bs64, 'test.pdf'))
-
-
-
     ...
 
