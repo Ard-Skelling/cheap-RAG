@@ -53,7 +53,7 @@ class LocalEmbedding(metaclass=Singleton):
         return embeddings.tolist()
 
 
-    async def a_embedding(self, input_texts: Union[str, List[str]]):
+    async def a_embedding(self, input_texts: Union[str, List[str]], *args, **kwargs):
         """Asynchronous embedding task, join the request queue, and wait for the return result"""
         if isinstance(input_texts, str):
             input_texts = [input_texts]

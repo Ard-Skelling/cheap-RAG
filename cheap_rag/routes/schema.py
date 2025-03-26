@@ -50,6 +50,8 @@ class DataInsertEngineRequest(VecBaseModel):
     domain: str = Field(..., description="collection for the data to insert")
     file_name: str = Field(..., min_length=1, max_length=255, description="Name of the file")
     file_meta: Union[dict, None] = Field(None,  description="file meta infomation")
+    ocr_api: Optional[str] = Field(None, description='Remote self-hosted OCR service API.')
+    emb_api: Optional[str] = Field(None, description='Remote self-hosted embedding service API.')
 
 
 class DataSearchEngineRequest(VecBaseModel):

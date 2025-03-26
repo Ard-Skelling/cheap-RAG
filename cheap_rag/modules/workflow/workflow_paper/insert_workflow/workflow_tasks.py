@@ -9,7 +9,7 @@ from collections import defaultdict
 from utils.logger import logger
 from utils.helpers import generate_md5, atimer
 from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
-from utils.tool_calling.api_calling import LlmApi
+from utils.tool_calling.api_calling import LlmApi, EmbeddingApi
 from utils.tool_calling.markdownnify import markdownify
 from modules.workflow.workflow_paper.config import (
     PaperChunkingConfig,
@@ -37,8 +37,8 @@ class Chunking:
     def __init__(self, pool: ProcessPoolExecutor, task:Task, config: PaperChunkingConfig = None) -> None:
         self.config = config or CHUNKING_CONFIG
         self.pool = pool
-        # 尽量只从self.task中读值，如果要修改，要加进程锁
         self.task = task
+        # Only for token count
         self.embedding = LocalEmbedding()
         self.init_chunking_params()
         self.init_result_dicts()
@@ -482,11 +482,17 @@ class Chunking:
 
 
 class InsertPreprocessing:
-    def __init__(self, pool:ProcessPoolExecutor, llm:LlmApi, config:PaperInsertPreprocessingConfig = None) -> None:
+    def __init__(
+            self, 
+            pool:ProcessPoolExecutor, 
+            llm:LlmApi, 
+            embedding:Union[LocalEmbedding, EmbeddingApi], 
+            config:PaperInsertPreprocessingConfig = None
+        ) -> None:
         self.config = config or IPP_CONFIG
         self.pool = pool
         self.llm = llm
-        self.embedding = LocalEmbedding()
+        self.embedding = embedding
     
 
     def process_chunks(self, file_name: str, chunks: Union[List[Chunk], List[AggChunk]], data_cls:Union[ESRawData, ESAggData]):
@@ -508,7 +514,7 @@ class InsertPreprocessing:
         return atom_chunks
 
 
-    async def to_embedding(self, file_name, emb_queue:asyncio.Queue, batch_size:int):
+    async def to_embedding(self, file_name, emb_queue:asyncio.Queue, batch_size:int, api:str=None):
         emb_results = dict()
         doc_ids = []
         docs = []
@@ -523,7 +529,7 @@ class InsertPreprocessing:
             docs.append(atom.text)
             count += 1
             if count == batch_size:
-                res = await self.embedding.a_embedding(docs)
+                res = await self.embedding.a_embedding(docs, api)
                 res = dict(zip(doc_ids, res))
                 emb_results.update(res)
                 doc_ids = []
@@ -532,7 +538,7 @@ class InsertPreprocessing:
             emb_queue.task_done()
         # Deal with residual data
         if doc_ids:
-            res = await self.embedding.a_embedding(docs)
+            res = await self.embedding.a_embedding(docs, api)
             res = dict(zip(doc_ids, res))
             emb_results.update(res)
         # TODO: Use async generator
@@ -650,7 +656,8 @@ class InsertPreprocessing:
         file_name: str, 
         chunks: List[AggChunk], 
         agg_chunks: List[AggChunk], 
-        atom_chunks: List[AtomChunk]
+        atom_chunks: List[AtomChunk],
+        emb_api: str = None
     ):
         emb_queue = asyncio.Queue()
         table_queue = asyncio.Queue()
@@ -662,7 +669,7 @@ class InsertPreprocessing:
         tasks.append(asyncio.create_task(process_aggs))
         tasks.append(asyncio.create_task(self.process_atoms(table_queue, emb_queue, atom_chunks)))
         tasks.append(asyncio.create_task(self.process_table_atom(file_name, table_queue, emb_queue)))
-        tasks.append(asyncio.create_task(self.to_embedding(file_name, emb_queue, self.embedding.config.batch_size)))
+        tasks.append(asyncio.create_task(self.to_embedding(file_name, emb_queue, self.embedding.config.batch_size, emb_api)))
         chunks, aggs, atoms, table_atoms, emb_results = await asyncio.gather(*tasks)
         chunks: List[dict] = chunks
         aggs: List[dict] = aggs

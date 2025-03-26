@@ -20,9 +20,9 @@ from cheap_rag.modules.workflow.workflow_paper.config import (
     LLM_CONFIG,
     WORKER_CONFIG
 )
-from utils.tool_calling.api_calling import LlmApi, OcrApi
+from utils.tool_calling.api_calling import LlmApi, OcrApi, EmbeddingApi
 from utils.tool_calling.doc_processing import read_file
-from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
+# from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
 from modules.storage import (
     MILVUS_STORAGE,
     ES_STORAGE,
@@ -75,7 +75,8 @@ class Worker:
     def init_tools(self):
         self.ocr = OcrApi(OCR_CONFIG)
         self.llm = LlmApi(LLM_CONFIG)
-        self.embedding = LocalEmbedding(LOCAL_EMBEDDING_CONFIG)
+        # Use remote EmbeddingApi or LocalEmbedding
+        self.embedding = EmbeddingApi()
 
 
     @atimer
@@ -88,7 +89,7 @@ class Worker:
     async def to_ocr(self, task: Task):
         pdf_stem = Path(task.task_meta.file_name).stem
         pdf_bs64 = task.result
-        await self.ocr.send_ocr(pdf_bs64, pdf_stem)
+        await self.ocr.send_ocr(pdf_bs64, pdf_stem, task.task_meta.ocr_api)
         task.task_meta.json_fp = self.ocr.config.ocr_cache \
             .joinpath(pdf_stem) \
             .joinpath(f'{pdf_stem}.json')
@@ -129,7 +130,7 @@ class Worker:
         domain, file_name = task.task_meta.domain, task.task_meta.file_name
         
         preprocessor = InsertPreprocessing(self.pool, self.llm, self.embedding)
-        chunks, aggs, atoms, emb_results = await preprocessor.process(file_name, chunks, agg_chunks, atom_chunks)
+        chunks, aggs, atoms, emb_results = await preprocessor.process(file_name, chunks, agg_chunks, atom_chunks, task.task_meta.emb_api)
         
         # 在插入前，删除旧文件，确保没有重复文件
         if self.config.delete_old:
@@ -247,11 +248,6 @@ class InsertWorkflow:
         # TODO: 使用redis来存储任务
 
 
-    def init_tools(self):
-        self.embedding = LocalEmbedding()
-        self.llm = LlmApi()
-
-
     async def abstr_add_task(self, task_manager:CoroTaskManager, task_id, coro_func, *args, **kwargs):
         await task_manager.add_task(task_id, coro_func(*args, **kwargs))
 
@@ -300,72 +296,9 @@ class InsertWorkflow:
                 task_manager.tasks.pop(task_id, None)
                 continue
         raise err
-    
-
-async def execute_one(
-        workflow: InsertWorkflow, 
-        task_manager: CoroTaskManager, 
-        pool: ProcessPoolExecutor, 
-        task_meta: TaskMeta, 
-        log_path: Path
-    ):
-    file_name = task_meta.file_name
-    try:
-        result = await workflow.submit(task_manager, pool, task_meta)
-        message = f'{file_name}: {result}'
-        with open(str(log_path), 'a') as f:
-            f.write(f'{message}\n\n')
-    except Exception as err:
-        message = f'{file_name}: {err}'
-        with open(str(log_path), 'a') as f:
-            f.write(f'{message}\n\n')
-        raise err
-
-
-async def main():
-    raw_dir = Path('/root/nlp/rag/cheap-RAG/dev/output')
-    log_dir = Path('/root/nlp/rag/cheap-RAG/dev/logs')
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir.joinpath('insert.log')
-
-    tasks = []
-
-    for cl in raw_dir.rglob('*_content_list.json'):
-        f_stem = cl.stem.rstrip('_content_list')
-        data_dir = cl.parent
-        tasks.append(TaskMeta(
-            domain='longevity_paper_2502', 
-            file_name=f'{f_stem}.pdf',
-            json_fp=cl,
-            image_dir=data_dir.joinpath('images')
-        ))
-
-
-    task_manager = CoroTaskManager()
-    flow = InsertWorkflow(WORKER_CONFIG)
-
-    with ProcessPoolExecutor(6) as pool:
-        semaphore = asyncio.Semaphore(8)
-        async with semaphore:
-            futures = []
-            for task_meta in tasks:
-                futures.append(
-                    asyncio.create_task(
-                        execute_one(
-                            flow,
-                            task_manager, 
-                            pool, 
-                            task_meta,
-                            log_path
-                        )
-                    )
-                )
-            await asyncio.gather(*futures)
-
-    print('All tasks are finished.')
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    ...
 
 

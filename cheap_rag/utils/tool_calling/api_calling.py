@@ -85,8 +85,8 @@ class OcrApi:
         self.semaphore = asyncio.Semaphore(self.config.sema_process)
 
 
-    async def send_ocr(self, pdf_bs64:str, pdf_prefix:str):
-        url = self.config.base_url
+    async def send_ocr(self, pdf_bs64:str, pdf_prefix:str, ocr_api:str=None):
+        url = ocr_api or self.config.base_url
         pdf_name = f'{pdf_prefix}.pdf'
         data = {"file_name": pdf_name, "file_bs64": pdf_bs64, 'token': getenv('LOCAL_OCR_TOKEN')}
         result = await fetch(
@@ -108,22 +108,6 @@ class OcrApi:
         #     |--image_0.jpg
         #     |--image_1.jpg
         tar_gz_file.extractall(str(extract_path))
-
-    
-    async def sned_dir(self, input_dir:str, save_dir:str):
-        input_dir = Path(input_dir)
-        save_dir = Path(save_dir)
-        files = input_dir.rglob('*')
-        loop = asyncio.get_running_loop()
-        for f in files:
-            pdf_prefix = f.stem
-            suffix = f.suffix
-            if suffix not in ['.pdf', '.PDF']:
-                continue
-            pdf_bytes = await loop.run_in_executor(None, read_file, str(f))
-            res = await self.send_ocr(pdf_bytes, pdf_prefix, domain='temp')
-            save_fp = save_dir.joinpath(f'{pdf_prefix}.json')
-            await loop.run_in_executor(None, write_file, res, str(save_fp))
 
 
 class EmbeddingApi:
@@ -153,6 +137,22 @@ class EmbeddingApi:
             semaphore=self.semaphore
         )
         result = [rec['embedding'] for rec in result['data']]
+        return result
+    
+
+    async def a_embedding(self, content:Union[str, List[str]], api: str = None):
+        # Remote local embedding
+        body = {
+            'documents': content,
+            'token': getenv('LOCAL_EMB_TOKEN')
+        }
+        result = await fetch(
+            api, 
+            body, 
+            self.__class__.__name__, 
+            self.config.timeout,
+            semaphore=self.semaphore
+        )
         return result
 
 
