@@ -23,6 +23,8 @@ class TaskMeta(TaskData):
     image_dir: Path = None
     result: Any = None
     init_step: str = None
+    ocr_api: str = None
+    emb_api: str = None
 
 
 class Task(BaseModel):
@@ -32,7 +34,7 @@ class Task(BaseModel):
     step: str
     status: Literal['pending', 'processing', 'completed', 'failed']
     result: Any = None
-
+    
 
 class FileData(TaskData):
     file_name: str = None

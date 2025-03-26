@@ -27,7 +27,9 @@ async def insert(request: DataInsertEngineRequest):
             file_name=request.file_name,
             csid=request.csid,
             init_step='to_ocr',
-            result=request.file_bs64
+            result=request.file_bs64,
+            ocr_api=request.ocr_api,
+            emb_api=request.emb_api
         )
         result = await WORKFLOW.submit(TASK_MANAGER, POOL, task_meta)
         return APIResponse(
