@@ -404,7 +404,7 @@ pycparser = "*"
 name = "charset-normalizer"
 version = "3.4.1"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-optional = false
+optional = true
 python-versions = ">=3.7"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -535,7 +535,7 @@ markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win
 name = "coloredlogs"
 version = "15.0.1"
 description = "Colored terminal output for Python's logging module"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 groups = ["main"]
 markers = "extra == \"cpu\" or extra == \"gpu\""
@@ -723,7 +723,7 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 name = "filelock"
 version = "3.17.0"
 description = "A platform independent file lock."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -741,7 +741,7 @@ typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 name = "flatbuffers"
 version = "25.2.10"
 description = "The FlatBuffers serialization format for Python"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"cpu\" or extra == \"gpu\""
@@ -856,7 +856,7 @@ files = [
 name = "fsspec"
 version = "2025.2.0"
 description = "File-system specification"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -1024,7 +1024,7 @@ zstd = ["zstandard (>=0.18.0)"]
 name = "huggingface-hub"
 version = "0.29.1"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
-optional = false
+optional = true
 python-versions = ">=3.8.0"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -1060,7 +1060,7 @@ typing = ["types-PyYAML", "types-requests", "types-simplejson", "types-toml", "t
 name = "humanfriendly"
 version = "10.0"
 description = "Human friendly output for text interfaces using Python"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 groups = ["main"]
 markers = "extra == \"cpu\" or extra == \"gpu\""
@@ -1193,7 +1193,7 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<9.0.0)"]
 name = "jinja2"
 version = "3.1.5"
 description = "A very fast and expressive template engine."
-optional = false
+optional = true
 python-versions = ">=3.7"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -1339,31 +1339,10 @@ docs = ["myst-parser", "pydata-sphinx-theme", "sphinx-autodoc-typehints", "sphin
 test = ["ipykernel", "pre-commit", "pytest (<8)", "pytest-cov", "pytest-timeout"]
 
 [[package]]
-name = "mako"
-version = "1.3.9"
-description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-markers = "extra == \"gpu\""
-files = [
-    {file = "Mako-1.3.9-py3-none-any.whl", hash = "sha256:95920acccb578427a9aa38e37a186b1e43156c87260d7ba18ca63aa4c7cbd3a1"},
-    {file = "mako-1.3.9.tar.gz", hash = "sha256:b5d65ff3462870feec922dbccf38f6efb44e5714d7b593a656be86663d8600ac"},
-]
-
-[package.dependencies]
-MarkupSafe = ">=0.9.2"
-
-[package.extras]
-babel = ["Babel"]
-lingua = ["lingua"]
-testing = ["pytest"]
-
-[[package]]
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -1487,7 +1466,7 @@ urllib3 = "*"
 name = "mpmath"
 version = "1.3.0"
 description = "Python library for arbitrary-precision floating-point arithmetic"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -1620,7 +1599,7 @@ files = [
 name = "networkx"
 version = "3.4.2"
 description = "Python package for creating and manipulating graphs and networks"
-optional = false
+optional = true
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -1706,7 +1685,7 @@ files = [
 name = "nvidia-cublas-cu12"
 version = "12.4.5.8"
 description = "CUBLAS native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1720,7 +1699,7 @@ files = [
 name = "nvidia-cuda-cupti-cu12"
 version = "12.4.127"
 description = "CUDA profiling tools runtime libs."
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1734,7 +1713,7 @@ files = [
 name = "nvidia-cuda-nvrtc-cu12"
 version = "12.4.127"
 description = "NVRTC native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1748,7 +1727,7 @@ files = [
 name = "nvidia-cuda-runtime-cu12"
 version = "12.4.127"
 description = "CUDA Runtime native Libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1762,7 +1741,7 @@ files = [
 name = "nvidia-cudnn-cu12"
 version = "9.1.0.70"
 description = "cuDNN runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1778,7 +1757,7 @@ nvidia-cublas-cu12 = "*"
 name = "nvidia-cufft-cu12"
 version = "11.2.1.3"
 description = "CUFFT native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1795,7 +1774,7 @@ nvidia-nvjitlink-cu12 = "*"
 name = "nvidia-curand-cu12"
 version = "10.3.5.147"
 description = "CURAND native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1809,7 +1788,7 @@ files = [
 name = "nvidia-cusolver-cu12"
 version = "11.6.1.9"
 description = "CUDA solver native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1828,7 +1807,7 @@ nvidia-nvjitlink-cu12 = "*"
 name = "nvidia-cusparse-cu12"
 version = "12.3.1.170"
 description = "CUSPARSE native runtime libraries"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1845,7 +1824,7 @@ nvidia-nvjitlink-cu12 = "*"
 name = "nvidia-cusparselt-cu12"
 version = "0.6.2"
 description = "NVIDIA cuSPARSELt"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1859,7 +1838,7 @@ files = [
 name = "nvidia-nccl-cu12"
 version = "2.21.5"
 description = "NVIDIA Collective Communication Library (NCCL) Runtime"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1871,7 +1850,7 @@ files = [
 name = "nvidia-nvjitlink-cu12"
 version = "12.4.127"
 description = "Nvidia JIT LTO Library"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1885,7 +1864,7 @@ files = [
 name = "nvidia-nvtx-cu12"
 version = "12.4.127"
 description = "NVIDIA Tools Extension"
-optional = false
+optional = true
 python-versions = ">=3"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -1899,7 +1878,7 @@ files = [
 name = "onnx"
 version = "1.17.0"
 description = "Open Neural Network Exchange"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -1943,7 +1922,7 @@ reference = ["Pillow", "google-re2"]
 name = "onnxruntime"
 version = "1.20.1"
 description = "ONNX Runtime is a runtime accelerator for Machine Learning models"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"cpu\""
@@ -1983,7 +1962,7 @@ sympy = "*"
 name = "onnxruntime-gpu"
 version = "1.20.1"
 description = "ONNX Runtime is a runtime accelerator for Machine Learning models"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -2185,12 +2164,11 @@ version = "4.3.6"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev"]
+groups = ["dev"]
 files = [
     {file = "platformdirs-4.3.6-py3-none-any.whl", hash = "sha256:73e575e1408ab8103900836b97580d5307456908a03e92031bab39e4554cc3fb"},
     {file = "platformdirs-4.3.6.tar.gz", hash = "sha256:357fb2acbc885b0419afd3ce3ed34564c13c9b95c89360cd9563f73aa5e2b907"},
 ]
-markers = {main = "extra == \"gpu\""}
 
 [package.extras]
 docs = ["furo (>=2024.8.6)", "proselint (>=0.14)", "sphinx (>=8.0.2)", "sphinx-autodoc-typehints (>=2.4)"]
@@ -2449,23 +2427,6 @@ files = [
 ]
 
 [[package]]
-name = "pycuda"
-version = "2025.1"
-description = "Python wrapper for Nvidia CUDA"
-optional = false
-python-versions = "~=3.8"
-groups = ["main"]
-markers = "extra == \"gpu\""
-files = [
-    {file = "pycuda-2025.1.tar.gz", hash = "sha256:52738e9a941c295c0a5df6aa0d49ac89f66d835dacce9c9c8b84e7530fe4622f"},
-]
-
-[package.dependencies]
-mako = "*"
-platformdirs = ">=2.2.0"
-pytools = ">=2011.2"
-
-[[package]]
 name = "pydantic"
 version = "2.10.6"
 description = "Data validation using Python type hints"
@@ -2665,7 +2626,7 @@ model = ["milvus-model (>=0.1.0)"]
 name = "pyreadline3"
 version = "3.5.4"
 description = "A python implementation of GNU readline."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "sys_platform == \"win32\" and (extra == \"cpu\" or extra == \"gpu\")"
@@ -2706,28 +2667,6 @@ files = [
 
 [package.extras]
 cli = ["click (>=5.0)"]
-
-[[package]]
-name = "pytools"
-version = "2025.1.1"
-description = "A collection of tools for Python"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-markers = "extra == \"gpu\""
-files = [
-    {file = "pytools-2025.1.1-py3-none-any.whl", hash = "sha256:87d58b0529fe1542910b4cb54a70295a7ed9d810afd89df5540ee8cca7ff3a70"},
-    {file = "pytools-2025.1.1.tar.gz", hash = "sha256:80f8e3f3f7756d0c9bd579879c3528d54e422843b50a288a9c3b6ba3e0eac28b"},
-]
-
-[package.dependencies]
-platformdirs = ">=2.2"
-typing-extensions = ">=4.5"
-
-[package.extras]
-numpy = ["numpy (>=1.6)"]
-siphash = ["siphash24 (>=1.6)"]
-test = ["mypy", "pytest", "ruff"]
 
 [[package]]
 name = "pytz"
@@ -2774,7 +2713,7 @@ files = [
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -2960,7 +2899,7 @@ cffi = {version = "*", markers = "implementation_name == \"pypy\""}
 name = "regex"
 version = "2024.11.6"
 description = "Alternative regular expression module, to replace re."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3065,7 +3004,7 @@ files = [
 name = "requests"
 version = "2.32.3"
 description = "Python HTTP for Humans."
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3088,7 +3027,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 name = "safetensors"
 version = "0.5.3"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.7"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3222,7 +3161,7 @@ full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart 
 name = "sympy"
 version = "1.13.1"
 description = "Computer algebra system (CAS) in Python"
-optional = false
+optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3241,7 +3180,7 @@ dev = ["hypothesis (>=6.70.0)", "pytest (>=7.1.0)"]
 name = "tokenizers"
 version = "0.21.0"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.7"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3275,7 +3214,7 @@ testing = ["black (==22.3)", "datasets", "numpy", "pytest", "requests", "ruff"]
 name = "torch"
 version = "2.6.0"
 description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
-optional = false
+optional = true
 python-versions = ">=3.9.0"
 groups = ["main"]
 markers = "extra == \"gpu\""
@@ -3392,7 +3331,7 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,
 name = "transformers"
 version = "4.49.0"
 description = "State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow"
-optional = false
+optional = true
 python-versions = ">=3.9.0"
 groups = ["main"]
 markers = "extra == \"gpu\" or extra == \"cpu\""
@@ -3463,7 +3402,7 @@ vision = ["Pillow (>=10.0.1,<=15.0)"]
 name = "triton"
 version = "3.2.0"
 description = "A language and compiler for custom Deep Learning operations"
-optional = false
+optional = true
 python-versions = "*"
 groups = ["main"]
 markers = "platform_system == \"Linux\" and platform_machine == \"x86_64\" and extra == \"gpu\""
@@ -3758,9 +3697,9 @@ propcache = ">=0.2.0"
 
 [extras]
 cpu = ["onnxruntime", "transformers"]
-gpu = ["onnx", "onnxruntime-gpu", "pycuda", "torch", "transformers"]
+gpu = ["onnx", "onnxruntime-gpu", "torch", "transformers"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.14"
-content-hash = "face3ea78f5ae80bb4a99778b8707ab5ce50ccd6d74f75cac6f1e6b5a6089d5a"
+content-hash = "a82c8322c2b638862c7a37a4cc4712a24a0607d57b0954b17e3f6ffb4d1daa29"
