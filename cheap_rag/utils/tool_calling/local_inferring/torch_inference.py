@@ -108,7 +108,7 @@ if __name__ == '__main__':
     documents = [
         "As a general guideline, the CDC's average requirement of protein for women ages 19 to 70 is 46 grams per day.",
         "1.清炒南瓜丝 原料:嫩南瓜半个 调料:葱、盐、白糖、鸡精 做法: 1、南瓜用刀薄薄的削去表面一层皮,用勺子刮去瓤..."
-    ] * 1000
+    ]
 
     async def main():
         emb = LocalEmbedding()
