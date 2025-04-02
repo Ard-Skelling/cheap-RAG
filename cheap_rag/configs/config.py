@@ -19,6 +19,7 @@ from configs.config_cls import (
 
 
 MACHINE_ID = 1
+USE_GPU = True
 
 
 LOGGER_CONFIG = LoggerConfig(

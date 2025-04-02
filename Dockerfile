@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
 	vim \
 	procps \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 ENV POETRY_VERSION=2.1.1

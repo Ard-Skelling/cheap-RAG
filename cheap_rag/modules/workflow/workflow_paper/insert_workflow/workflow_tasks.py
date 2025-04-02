@@ -8,7 +8,6 @@ from collections import defaultdict
 # Local modules
 from utils.logger import logger
 from utils.helpers import generate_md5, atimer
-from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
 from utils.tool_calling.api_calling import LlmApi, EmbeddingApi
 from utils.tool_calling.markdownnify import markdownify
 from modules.workflow.workflow_paper.config import (
@@ -31,6 +30,11 @@ from modules.workflow.workflow_paper.data_cls import (
     ESRawData,
     MilvusData
 )
+from configs.config import USE_GPU
+if USE_GPU:
+    from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
+else:
+    from utils.tool_calling.local_inferring.onnx_inference import LocalEmbedding
 
 
 class Chunking:
@@ -73,7 +77,7 @@ class Chunking:
         """Handle meaningless characters in text.
         Milvus will recognize some characters as more than one character."""
         if is_title:
-            text = re.sub('[^0-9a-zA-Z一-龥 \.·,，。]', '', text)
+            text = re.sub(r'[^0-9a-zA-Z一-龥 \.·,，。]', '', text)
         text = re.sub(r'···+', '···', text)
         text = re.sub(r'。。+', '。。', text)
         text = re.sub(r'\.\.\.+', '...', text)
@@ -234,7 +238,7 @@ class Chunking:
     def build_text_atom(self, file_name:str, cumu_size:int, text:str, agg_index:int):
         # divide atomic segments
         if cumu_size > 2 * self.atom_threshold:
-            texts = re.sub('(?<=\w)\. ', '.\n', text)
+            texts = re.sub(r'(?<=\w)\. ', '.\n', text)
             texts = [t.strip() for t in texts.split('\n')]
             cumu = 0
             temp_t = ''
