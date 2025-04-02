@@ -3,8 +3,9 @@ FROM python:3.12.9-slim-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-	vim \
-	procps \
+    vim \
+    procps \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 ENV POETRY_VERSION=2.1.1

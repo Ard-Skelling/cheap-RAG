@@ -7,7 +7,11 @@ router = APIRouter()
 
 # local module
 from routes.schema import EmbeddingRequest, APIResponse
-from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
+from configs.config import USE_GPU
+if USE_GPU:
+    from utils.tool_calling.local_inferring.torch_inference import LocalEmbedding
+else:
+    from utils.tool_calling.local_inferring.onnx_inference import LocalEmbedding
 
 
 @router.post('/embedding')
