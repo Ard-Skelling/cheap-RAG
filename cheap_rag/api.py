@@ -5,7 +5,7 @@ from fastapi import FastAPI
 # local module
 from routes.insert import router as insert_router
 from routes.query import router as query_router
-from cheap_rag.routes.tool import router as tool_router
+from routes.tool import router as tool_router
 
 
 # API

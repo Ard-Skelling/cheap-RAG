@@ -28,6 +28,7 @@ OCR_CACHE.mkdir(parents=True, exist_ok=True)
 
 # Logger config
 class LoggerConfig(BaseSettings):
+    name: str
     file_name: str = 'cheap_rag.log'
     level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
     when: str = 'midnight'    # S-Seconds, M-Minutes, H-Hours, D-Days, midnight, W{0-6}-certain day

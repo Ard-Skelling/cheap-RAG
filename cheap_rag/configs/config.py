@@ -22,6 +22,7 @@ MACHINE_ID = 1
 
 
 LOGGER_CONFIG = LoggerConfig(
+    name='cheap-RAG',
     file_name='cheap_rag.log',
     level='INFO',
     when='midnight',
