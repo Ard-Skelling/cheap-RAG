@@ -14,7 +14,7 @@ from configs.config_cls import (
     LlmConfig,
     WorkerConfig
 )
-from cheap_rag.modules.workflow.workflow_paper.config import (
+from modules.workflow.workflow_paper.config import (
     LOCAL_EMBEDDING_CONFIG,
     OCR_CONFIG,
     LLM_CONFIG,

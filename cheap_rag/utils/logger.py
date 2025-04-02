@@ -17,7 +17,7 @@ log_dir.mkdir(exist_ok=True, parents=True)
 log_file = str(log_dir.joinpath(LOGGER_CONFIG.file_name))
 
 # Initiate logger
-logger = logging.getLogger()
+logger = logging.getLogger(LOGGER_CONFIG.name)
 logger.setLevel(getattr(logging, LOGGER_CONFIG.level))
 
 # Set TimedRotatingFileHandler
