@@ -8,7 +8,7 @@ from pathlib import Path
 
 # local module
 from utils.logger import logger
-from utils.helpers import SnowflakeIDGenerator, AsyncDict, atimer
+from utils.helpers import SnowflakeIDGenerator, AsyncDict, atimer, generate_md5
 from configs.config_cls import (
     LocalEmbeddingConfig,
     LlmConfig,
@@ -91,8 +91,8 @@ class Worker:
         pdf_bs64 = task.result
         await self.ocr.send_ocr(pdf_bs64, pdf_stem, task.task_meta.ocr_api)
         task.task_meta.json_fp = self.ocr.config.ocr_cache \
-            .joinpath(pdf_stem) \
-            .joinpath(f'{pdf_stem}.json')
+            .joinpath(generate_md5(pdf_stem)) \
+            .joinpath(f'{generate_md5(pdf_stem)}.json')
         task.step = 'chunking'
         # free pdf base64 memory
         task.task_meta.result = None

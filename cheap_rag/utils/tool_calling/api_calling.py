@@ -14,6 +14,7 @@ from typing import Union, List
 
 # local module
 from utils.logger import logger
+from utils.helpers import generate_md5
 from configs.config_cls import (
     OcrConfig,
     EmbeddingConfig,
@@ -24,7 +25,6 @@ from configs.config import (
     EMBEDDING_CONFIG,
     LLM_CONFIG
 )
-from utils.tool_calling.doc_processing import read_file, write_file
 
 
 async def fetch(
@@ -87,7 +87,7 @@ class OcrApi:
 
     async def send_ocr(self, pdf_bs64:str, pdf_prefix:str, ocr_api:str=None):
         url = ocr_api or self.config.base_url
-        pdf_name = f'{pdf_prefix}.pdf'
+        pdf_name = f'{generate_md5(pdf_prefix)}.pdf'
         data = {"file_name": pdf_name, "file_bs64": pdf_bs64, 'token': getenv('LOCAL_OCR_TOKEN')}
         result = await fetch(
             url, 
@@ -100,10 +100,10 @@ class OcrApi:
         # Extract the responsed tar.gz file
         tar_gz_file = tarfile.open(fileobj=io.BytesIO(result), mode="r:gz")
         cache_dir = self.config.ocr_cache
-        extract_path = cache_dir.joinpath(pdf_prefix)
+        extract_path = cache_dir.joinpath(generate_md5(pdf_prefix))
         extract_path.mkdir(parents=True, exist_ok=True)
-        # <pdf_prefix>
-        # |--file_name.json
+        # <pdf_name_md5>
+        # |--file_name_md5.json
         # |--images
         #     |--image_0.jpg
         #     |--image_1.jpg
