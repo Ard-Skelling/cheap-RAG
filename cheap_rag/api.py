@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from routes.insert import router as insert_router
 from routes.query import router as query_router
 from routes.tool import router as tool_router
+from routes.pub_storage import router as storage_router
 
 
 # API
@@ -14,6 +15,7 @@ app = FastAPI()
 app.include_router(query_router, prefix='/api/v1/query', tags=['query'])
 app.include_router(tool_router, prefix='/api/v1/tool', tags=['tool'])
 app.include_router(insert_router, prefix='/api/v1/insert', tags=['insert'])
+app.include_router(storage_router, prefix='/api/v1/storage', tags=['storage'])
 
 
 @app.get("/test_get")

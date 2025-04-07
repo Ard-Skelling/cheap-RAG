@@ -154,7 +154,7 @@ class Worker:
     async def upload_object(self, task: Task):
         domain = task.task_meta.domain
         file_name = task.task_meta.file_name
-        img_dir = self.ocr.config.ocr_cache.joinpath(Path(file_name).stem)
+        img_dir = self.ocr.config.ocr_cache.joinpath(generate_md5(str(Path(file_name).stem)))
         imgs = img_dir.glob('*.jpg')
         to_upload = []
         for img in imgs:
@@ -184,7 +184,7 @@ class Worker:
         file_name = task.task_meta.file_name
         raw_fp = self.config.raw_cache.joinpath(file_name)
         raw_fp.unlink(missing_ok=True)
-        ocr_dir = self.ocr.config.ocr_cache.joinpath(Path(file_name).stem)
+        ocr_dir = self.ocr.config.ocr_cache.joinpath(generate_md5(str(Path(file_name).stem)))
         shutil.rmtree(str(ocr_dir))
     
 

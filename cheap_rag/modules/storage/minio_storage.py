@@ -1,10 +1,10 @@
-import json
-from io import BytesIO
-from minio import Minio
-from minio.error import S3Error
-from minio.deleteobjects import DeleteObject
 import sys
 import os
+import json
+from io import BytesIO
+from datetime import timedelta
+from minio import Minio
+from minio.deleteobjects import DeleteObject
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -229,6 +229,11 @@ class MinioStorage:
         if errors:
             for error in errors:
                 logger.error("error occurred when Minio deleting object", error)
+
+
+    def generate_link(self, obj_name, bucket_name=None, expires_seconds=300):
+        bucket_name = bucket_name or self.config.bucket
+        return self.client.presigned_get_object(bucket_name, obj_name, expires=timedelta(seconds=expires_seconds))
             
         
 MINIO_STORAGE = MinioStorage()
