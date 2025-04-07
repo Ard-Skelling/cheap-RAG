@@ -154,11 +154,12 @@ class Worker:
     async def upload_object(self, task: Task):
         domain = task.task_meta.domain
         file_name = task.task_meta.file_name
-        img_dir = self.ocr.config.ocr_cache.joinpath(generate_md5(str(Path(file_name).stem)))
+        file_name_md5 = generate_md5(str(Path(file_name).stem))
+        img_dir = self.ocr.config.ocr_cache.joinpath(file_name_md5).joinpath('images')
         imgs = img_dir.glob('*.jpg')
         to_upload = []
         for img in imgs:
-            obj_name = f'{domain}/{file_name}/images/{img.name}'
+            obj_name = f'{domain}/{file_name_md5}/images/{img.name}'
             with open(str(img), 'rb') as f:
                 obj_bytes = io.BytesIO(f.read())
             to_upload.append(asyncio.to_thread(
