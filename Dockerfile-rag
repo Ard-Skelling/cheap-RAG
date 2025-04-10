@@ -1,0 +1,49 @@
+FROM python:3.12.9-slim-bookworm
+
+# Install system dependencies in one layer and clean up
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    vim \
+    procps \
+    git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry with optimized approach
+ARG POETRY_VERSION=2.1.1
+ENV POETRY_VERSION=${POETRY_VERSION} \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1 \
+    PATH="/opt/poetry/bin:${PATH}"
+
+RUN curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION} && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+# Pre-download models
+RUN pip install --no-cache-dir huggingface_hub && \
+    mkdir -p /download_models/embeddings && \
+    huggingface-cli download intfloat/multilingual-e5-large-instruct \
+    --local-dir /download_models/embeddings \
+    --local-dir-use-symlinks False
+
+WORKDIR /cheap-RAG
+COPY pyproject.toml poetry.lock ./
+
+# Install dependencies using cached layers
+RUN poetry install --no-root --no-interaction --no-ansi --extras "cpu" && \
+    rm -rf /root/.cache /tmp/* && \
+    find /usr/local/lib/python3.12 -type d -name "__pycache__" -exec rm -rf {} +
+
+# Install dependencies for GPU support (optional, remove if not needed)
+# RUN poetry install --no-interaction --no-ansi --extras "gpu" && \
+#     rm -rf /root/.cache /tmp/* && \
+#     find /usr/local/lib/python3.12 -type d -name "__pycache__" -exec rm -rf {} +
+
+COPY . .
+
+# Source .env during build (optional, remove if not needed at build time)
+RUN if [ -f .env ]; then set -a && . ./.env && set +a; fi
+
+CMD ["python", "cheap-RAG/api.py"]

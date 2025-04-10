@@ -1,0 +1,15 @@
+FROM elasticsearch:8.15.3
+LABEL maintainer="599957546@qq.com"
+WORKDIR /usr/share/elasticsearch
+
+# 切换到root以安装插件和调整权限
+USER root
+RUN bin/elasticsearch-plugin install --batch https://get.infini.cloud/elasticsearch/analysis-ik/8.15.3
+RUN mkdir -p /usr/share/elasticsearch/data && chown -R 1000:0 /usr/share/elasticsearch/data
+
+# 切换回Elasticsearch的非root用户（通常UID为1000）
+USER 1000
+
+ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
+EXPOSE 9200 9300
+CMD ["elasticsearch"]
