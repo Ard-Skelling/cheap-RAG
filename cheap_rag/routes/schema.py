@@ -14,7 +14,13 @@ class VecBaseModel(BaseModel):
 
 class VecDataCreateEngineRequest(VecBaseModel):
     collections: Union[str, List[str]] = Field(..., min_items=1, description="List of collection names")
-    version: int = Field(1, description='The retrival service version.')
+    token: str = Field(..., description="Token for authentication")
+
+    @field_validator('token')
+    def validate_token(cls, v):
+        if v != getenv('LOCAL_TOKEN'):
+            raise ValueError('Wrong token.')
+        return v
 
 
 class DataDeleteEngineRequest(VecBaseModel):
@@ -24,6 +30,13 @@ class DataDeleteEngineRequest(VecBaseModel):
 
 class VecDataDeleteEngineRequest(VecBaseModel):
     collections: Union[List[str], str] = Field(..., description="List of collection names")
+    token: str = Field(..., description="Token for authentication")
+
+    @field_validator('token')
+    def validate_token(cls, v):
+        if v != getenv('LOCAL_TOKEN'):
+            raise ValueError('Wrong token.')
+        return v
 
 
 class FieldSearchEngineRequest(VecBaseModel):
