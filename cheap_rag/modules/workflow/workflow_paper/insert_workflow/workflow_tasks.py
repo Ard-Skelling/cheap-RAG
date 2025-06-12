@@ -244,13 +244,40 @@ class Chunking:
             temp_t = ''
             for t in texts:
                 tokens = self.embedding.count_tokens(t)
-                cumu += tokens
-                temp_t = f'{temp_t}{t}\n'
+                # 如果当前句子加上已有内容会超过阈值，先处理已有内容
+                if cumu + tokens > self.atom_threshold:
+                    if temp_t:  # 确保有内容才处理
+                        self.build_general_atom(file_name, agg_index, temp_t)
+                        cumu = 0
+                        temp_t = ''
+                
+                # 如果单个句子就超过阈值，需要进一步分割
+                if tokens > self.atom_threshold:
+                    # 按句子分割
+                    sentences = re.split(r'[.!?\n]+', t)
+                    for sentence in sentences:
+                        sentence = sentence.strip()
+                        if not sentence:
+                            continue
+                        sentence_tokens = self.embedding.count_tokens(sentence)
+                        if cumu + sentence_tokens > self.atom_threshold:
+                            if temp_t:  # 确保有内容才处理
+                                self.build_general_atom(file_name, agg_index, temp_t)
+                                cumu = 0
+                                temp_t = ''
+                        temp_t = f'{temp_t}{sentence}. '
+                        cumu += sentence_tokens
+                else:
+                    temp_t = f'{temp_t}{t}\n'
+                    cumu += tokens
+                
+                # 如果累积的token数达到阈值，立即处理
                 if cumu >= self.atom_threshold:
                     self.build_general_atom(file_name, agg_index, temp_t)
                     cumu = 0
                     temp_t = ''
-            # append the last segment
+            
+            # 处理最后剩余的内容
             if temp_t:
                 self.build_general_atom(file_name, agg_index, temp_t)
         else:

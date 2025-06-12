@@ -16,9 +16,6 @@ from modules.workflow.workflow_paper.storage_design import (
 )
 
 
-
-
-
 class PaperKnowledge:
     async def create_db(self, domains: Union[str, List[str]]):
         """Create data containers for certain domain knowledge bases.
@@ -133,7 +130,6 @@ class PaperKnowledge:
 
 
 PAPER_KNOWLEDGE = PaperKnowledge()
-
 
 
 if __name__ == '__main__':

@@ -37,6 +37,8 @@ class HybridSearch:
 
     async def get_chunks(self, domain, index_name_pair: List[Tuple[int, str]], output_fields:List[str]):
         """Query the agg_chunks with """
+        if not index_name_pair:
+            return []
         order = {index_name: i for i, index_name in enumerate(index_name_pair)}
         build_query = lambda agg_index, file_name: {
             'query': {
@@ -202,6 +204,8 @@ class HybridSearch:
 
             # get chunks
             chunks = await self.get_chunks(domain, index_name_pairs, output_fields=['agg_index', 'page_index', 'text', 'file_name', 'chunk_type'])
+            if not chunks:
+                return []
             chunks = [chunk[0] for chunk in chunks]
             # get context
             if has_context:
