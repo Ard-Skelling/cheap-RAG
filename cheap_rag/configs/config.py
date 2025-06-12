@@ -1,4 +1,8 @@
 from os import getenv
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
+MODEL_DIR = BASE_DIR / 'model-params'
 
 
 # local module
@@ -19,7 +23,7 @@ from configs.config_cls import (
 
 
 MACHINE_ID = 1
-USE_GPU = True
+USE_GPU = False
 
 
 LOGGER_CONFIG = LoggerConfig(
@@ -58,7 +62,7 @@ ES_CONFIG = ESConfig(
 
 # tools config
 OCR_CONFIG = OcrConfig(
-    base_url='http://127.0.0.1:48308/v1/ocr',
+    base_url='http://127.0.0.1:8081/v1/ocr',
     timeout=3600,
     sema_process=4
 )
@@ -77,8 +81,8 @@ EMBEDDING_CONFIG = EmbeddingConfig(
 
 LOCAL_EMBEDDING_CONFIG = LocalEmbeddingConfig(
     emb_type='cuda',
-    model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct',
-    model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx',
+    model_dir=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct'),
+    model_path=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct/onnx/model.onnx'),
     batch_size=64
 )
 
