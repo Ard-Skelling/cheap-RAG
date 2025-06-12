@@ -14,6 +14,7 @@ from configs.config_cls import (
     InsertPreprocessingConfig,
     QueryConfig
 )
+from configs.config import MODEL_DIR
 
 
 class IgnoreRule(BaseSettings):
@@ -52,21 +53,21 @@ class PaperInsertPreprocessingConfig(InsertPreprocessingConfig):
 
 
 LOCAL_EMBEDDING_CONFIG = LocalEmbeddingConfig(
-    emb_type='cuda',
-    model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct',
-    model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx'
+    emb_type='cpu',
+    model_dir=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct'),
+    model_path=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct/onnx/model.onnx')
 )
 
 
 QUERY_EMBEDDING_CONFIG = LocalEmbeddingConfig(
     emb_type='cpu',
-    model_dir='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx',
-    model_path='/root/nlp/model-params/intfloat/multilingual-e5-large-instruct/onnx/model.onnx'
+    model_dir=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct/onnx'),
+    model_path=str(MODEL_DIR / 'intfloat/multilingual-e5-large-instruct/onnx/model.onnx')
 )
 
 
 OCR_CONFIG = OcrConfig(
-    base_url='http://127.0.0.1:48308/v1/ocr',
+    base_url='http://127.0.0.1:8081/v1/ocr',
     timeout=3600,
     sema_process=4
 )

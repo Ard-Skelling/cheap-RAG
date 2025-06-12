@@ -137,7 +137,7 @@ PAPER_KNOWLEDGE = PaperKnowledge()
 
 
 if __name__ == '__main__':
-    domain = 'longevity_paper_2502'
+    domain = 'paper_test'
     asyncio.run(PAPER_KNOWLEDGE.create_db(domain))
     # res = MILVUS_STORAGE.describe_collection(domain)
     # print(res)
