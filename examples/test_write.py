@@ -118,20 +118,23 @@ def bulk_insert(pdfs: list[str], available_ocr_endpoints: list[str], available_e
                 f.write(f"{json.dumps(result, indent=4, ensure_ascii=False)}\n\n")
 
 if __name__ == "__main__":
-    ocr_endpoint = "http://174.93.255.152:34730"
-    emb_endpoint = "http://174.93.255.152:34960"
+    ocr_endpoint = "http://127.0.0.1:34730"
+    emb_endpoint = "http://127.0.0.1:34960"
     domain = "paper_test"
-    pdf_path = "../data/DSAC-v2.pdf"
-    query = "reward function"
-    # result = test_insert_pdf(domain, pdf_path, ocr_endpoint, emb_endpoint)
-    # print(result)
-    # time.sleep(5)
+    base_dir = Path(__file__).parent.parent
+    pdf_path = str(base_dir / "examples" / "data" / "DSAC-v2.pdf")
+    query = "objective function"
+    result = test_insert_pdf(domain, pdf_path, ocr_endpoint, emb_endpoint)
+    print(result)
+    time.sleep(5)
     result = test_list_paper(domain)
     print(result)
-    # result = test_search(domain, query)
-    # print(result)
+    result = test_search(domain, query)
+    print(result)
     result = test_delete_paper(domain, "DSAC-v2.pdf")
     print(result)
     result = test_search(domain, query)
     print(result)
+    with open(base_dir / "dev" / "recall_3000.json", "w") as f:
+        json.dump(result, f, indent=4, ensure_ascii=False)
     ...
