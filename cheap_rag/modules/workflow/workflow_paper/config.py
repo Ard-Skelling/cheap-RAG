@@ -30,13 +30,13 @@ class IgnoreRule(BaseSettings):
 
 class PaperChunkingConfig(ChunkingConfig):
     # Aggregated chunk token threshold
-    agg_size: int = 3000    
+    agg_size: int = 3000
     # Overlap tokens between aggregated chunks
-    agg_overlap: int = 500   
+    agg_overlap: int = 500
     # Atomic chunk token threshold 
-    atom_size: int = 200    
+    atom_size: int = 200
     # Show table markdown + url in aggregated chunk or url only
-    show_table_md: bool = False    
+    show_table_md: bool = False
     # Show image markdown + url in aggregated chunk or url only
     show_image_md: bool = False
     build_graph: bool = False
