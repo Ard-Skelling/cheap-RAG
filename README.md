@@ -1,34 +1,148 @@
 # cheap-RAG
-A cheap but strong RAG framework.
+A cheap but strong Retrieval-Augmented Generation (RAG) framework.
 
+## Features
+- Lightweight, cost-effective, and easy to deploy
+- Supports document collection management, insertion, querying, and maintenance
+- Modular API design for flexible integration
 
 ## Workflow
 ### Collection Level Operation
-- Create of data collections, indices
-- Query for collection level
-- Drop colllection
+- Create and delete data collections (Hybrid Storage)
+- List and delete documents in collections
+- Collection maintenance
 
 ### Data Level Operation
-There are two main workflow for data level operation:
-- Insert workflow
-- Query workflow
+- Insert documents (PDF in base64 string)
+- Query documents with semantic search
 
 ![data_workflow](cheap_rag/assets/images/RAG_workflow.jpg)
 
-## GPU extras
-The inference can be accelerated by Nvidia GPU hardware with TensorRT.
+---
 
-### Install system dependencies
-**(Optional)**: If using docker container, please intall [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) first.
+## Installation & Run
+1. **Install dependencies**
+   ```bash
+   poetry install --extras cpu
+   # Use GPU
+   # poetry install --extras gpu
+   ```
+2. **Start the API server**
+   ```bash
+   eval $(poetry env activate)
+   python cheap_rag/api.py
+   ```
+   The server will run at `http://localhost:8002` by default.
 
-1. [Install CUDA](https://developer.nvidia.com/cuda-toolkit-archive) according to the CUDA installation instructions.
-2. [Download](https://docs.nvidia.com/deeplearning/tensorrt/latest/installing-tensorrt/installing.html#download) the TensorRT local repo file that matches the Ubuntu version and CPU architecture you are using.
-3. Install TensorRT from the Debian local repo package. Replace ubuntuxx04, 10.x.x, and cuda-x.x with your specific OS, TensorRT, and CUDA versions. For ARM SBSA and JetPack users, replace amd64 with arm64. JetPack users also need to replace nv-tensorrt-local-repo with nv-tensorrt-local-tegra-repo.
+---
+
+## API Endpoints
+
+### Health Check
+- **GET** `/api/health`
+  - **Response:** `{ "status": 200, "message": "OK" }`
+
+### Document Insertion
+- **POST** `/api/v1/insert/insert_pdf`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",           // Client UUID
+      "file_bs64": "string",      // Base64 encoded PDF
+      "domain": "string",         // Collection name
+      "file_name": "string",      // File name
+      "file_meta": { ... },        // (Optional) File metadata
+      "ocr_api": "string",        // (Optional) OCR API endpoint
+      "emb_api": "string"         // (Optional) Embedding API endpoint
+    }
+    ```
+  - **Response:**
+    ```json
+    { "status": 200, "result": ..., "message": "SUCCESS" }
+    ```
+
+### Document Query
+- **POST** `/api/v1/query/search`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",
+      "query": "string",           // Query text
+      "domain": "string",          // Collection name
+      "threshold": 0.01,            // (Optional) Similarity threshold
+      "topk": 10,                   // (Optional) Number of results
+      "output_fields": ["text", "file_name", ...] // (Optional) Fields to return
+    }
+    ```
+  - **Response:**
+    ```json
+    { "status": 200, "result": [...], "message": "SUCCESS" }
+    ```
+
+### Embedding Service
+- **POST** `/api/v1/tool/embedding`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",
+      "contents": ["string", ...], // Texts to embed
+      "token": "string"            // Embedding service token
+    }
+    ```
+  - **Response:**
+    ```json
+    { "status": 200, "result": [...], "message": "SUCCESS" }
+    ```
+
+### Image Retrieval
+- **GET** `/api/v1/storage/image?domain=xxx&file=xxx&image=xxx`
+  - **Query Params:**
+    - `domain`: Collection name
+    - `file`: File name
+    - `image`: Image name (without .jpg)
+  - **Response:** JPEG image stream
+
+### Collection Maintenance
+- **POST** `/api/v1/maintain/create_paper_collection`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",
+      "collections": ["string", ...],
+      "token": "string" // Admin token
+    }
+    ```
+- **POST** `/api/v1/maintain/delete_paper_collection`
+  - **Body:** Same as above
+- **POST** `/api/v1/maintain/delete_paper`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",
+      "domain": "string",
+      "file_name": ["string", ...]
+    }
+    ```
+- **POST** `/api/v1/maintain/list_paper`
+  - **Body:**
+    ```json
+    {
+      "csid": "string",
+      "domain": "string"
+    }
+    ```
+
+---
+
+## Response Format
+All API responses (except image stream) follow:
+```json
+{
+  "status": 200,
+  "result": ...,   // Data or list
+  "message": "SUCCESS",
+  "time_cost": 0.123 // (Optional) Time cost in seconds
+}
 ```
-os="ubuntuxx04"
-tag="10.x.x-cuda-x.x"
-sudo dpkg -i nv-tensorrt-local-repo-${os}-${tag}_1.0-1_amd64.deb
-sudo cp /var/nv-tensorrt-local-repo-${os}-${tag}/*-keyring.gpg /usr/share/keyrings/
-sudo apt-get update
-sudo apt-get install tensorrt
-```
+
+---

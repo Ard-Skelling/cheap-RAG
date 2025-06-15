@@ -177,5 +177,9 @@ cython_debug/
 # local dev
 dev/
 
+# logs
+logs/
+nohup.out
+
 # model weights
 model-params/
