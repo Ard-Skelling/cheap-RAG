@@ -211,5 +211,11 @@ class LlmApi:
 
 
 if __name__ == '__main__':
-    ...
+    ocr_api = OcrApi()
+    base_dir = Path(__file__).parent.parent.parent.parent
+    asyncio.run(ocr_api.send_ocr(
+        pdf_bs64=base64.b64encode(open(base_dir / 'examples' / 'data' / 'DSAC-v2.pdf', 'rb').read()).decode('utf-8'),
+        pdf_prefix='DSAC-v2',
+        ocr_api='http://127.0.0.1:43919/v1/ocr'
+    ))
 

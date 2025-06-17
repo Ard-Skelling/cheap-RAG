@@ -20,6 +20,32 @@ A cheap but strong Retrieval-Augmented Generation (RAG) framework.
 
 ---
 
+
+## Pre-requirements
+Before you begin, make sure you have the following prerequisites set up.
+
+### 1. Environment Variables
+Set the access and secret keys for MinIO:
+```bash
+export MINIO_ACCESS_KEY="xxx"
+export MINIO_SECRET_KEY="xxx"
+```
+
+### 2. Prepare Directories
+Create the necessary directories for Elasticsearch and Milvus, and set permissions:
+```bash
+mkdir -p /database/es/data
+chmod -R 770 /database/es/data
+cp milvus-config.yaml /database/milvus-config.yaml
+```
+
+### 3. Start Services
+Use Docker Compose to start the required services in detached mode:
+```bash
+docker compose up -d
+```
+
+
 ## Installation & Run
 1. **Install dependencies**
    ```bash
