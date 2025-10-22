@@ -53,12 +53,19 @@ docker compose up -d
    # Use GPU
    # poetry install --extras gpu
    ```
-2. **Start the API server**
+2. **Download model weights**
+  ```bash
+  bash download_model.sh
+  ```
+3. **Modify config**
+  Modify the config in `cheap_rag/configs/config.py` and `cheap_rag/modules/workflow/workflow_paper/config.py`
+4. **Start the API server**
    ```bash
    eval $(poetry env activate)
    python cheap_rag/api.py
    ```
    The server will run at `http://localhost:8002` by default.
+
 
 ---
 
